@@ -50,6 +50,14 @@ function faixaDe(nivel, cotas) {
   return 'normal';
 }
 
+// Possível sensor travado: o mesmo valor agora, 1 h e 3 h antes, enquanto outra estação do mesmo rio
+// mudou pelo menos 5 cm em 3 horas. O valor não é descartado: às vezes o rio está parado mesmo
+// (abaixo das barragens fechadas, por exemplo). É só um aviso para conferir.
+function talvezTravado(e) {
+  if (e.nivel == null || !e.h1 || !e.h3 || e.nivel !== e.h1.nivel || e.nivel !== e.h3.nivel) return false;
+  return dados.estacoes.some((o) => o.id !== e.id && o.rio && o.rio === e.rio && o.nivel != null && o.h3 && Math.abs(o.nivel - o.h3.nivel) >= 0.05);
+}
+
 // Tendência: compara com a leitura de cerca de 1 hora antes (nunca com a coleta anterior).
 function tendencia(atual, nivel, h1) {
   if (nivel == null || !h1 || !atual) return null;
@@ -152,6 +160,12 @@ function cartaoEstacao(e) {
     if (f !== 'normal') art.classList.add(f);
   } else if (e.referencia === 'altitude') { faixa.textContent = 'altitude'; faixa.className = 'faixa neutra'; }
   else if (e.referencia === 'a-confirmar') { faixa.textContent = 'referência a confirmar'; faixa.className = 'faixa neutra'; }
+  if (talvezTravado(e)) {
+    const extra = document.createElement('span');
+    extra.className = 'faixa neutra';
+    extra.textContent = 'mesmo valor há 3 h: possível sensor travado';
+    faixa.after(extra);
+  }
   if (f && e.a_conferir.some((c) => c.startsWith('cotas'))) {
     const extra = document.createElement('span');
     extra.className = 'faixa neutra';

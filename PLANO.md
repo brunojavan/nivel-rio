@@ -234,7 +234,7 @@ Pronto quando o coletor rodar 72 horas sozinho sem nenhum buraco maior que 20 mi
 | xx:16 e xx:46 | AlertaBlu (Blumenau mede de hora em hora e publica uns 10 minutos depois) |
 | demais xx:01, xx:06… | Termina o download do histórico do passo zero (fila do Estado, até 10 nov); depois importa tudo para o banco definitivo |
 
-Uma tarefa por minuto por causa da CPU: na primeira versão, a coleta do Estado montava o resumo do site na mesma execução e gastava 24 a 36 ms, e o tapa-buraco 36 ms, contra 10 ms do plano grátis. A Cloudflare não interrompeu nenhuma, mas não dá para contar com essa tolerância.
+Uma tarefa por minuto por causa da CPU. Na primeira versão, a coleta do Estado montava o resumo do site na mesma execução e gastava 24 a 36 ms, contra 10 ms do plano grátis. A Cloudflare não interrompeu nenhuma, mas não dá para contar com essa tolerância. Depois da separação (medido em 7 nov, 22h30 UTC): Estado 9 ms, resumo do site 5 ms, Itajaí 7 ms, download do passo zero 6 a 8 ms. O tapa-buraco gasta 18 ms só na primeira passada, quando cada estação busca 7 dias; depois as janelas são de poucas horas.
 
 Decisões tomadas na implementação:
 
@@ -254,6 +254,8 @@ Decisões tomadas na implementação:
 - Página `/saude` com a situação de cada fonte, e mensagem no seu Telegram quando uma fonte ficar mais de 1 hora sem responder.
 
 Pronto quando, ao desligar uma fonte de propósito, o aviso chegar em menos de 1 hora.
+
+**Adiantado em 7 nov 2026:** a tabela de cotas com vigência já funciona (cada mudança de cota ganha uma linha nova com a data). O site já avisa "sem leitura nova" quando passa do dobro do intervalo normal e mostra "possível sensor travado" quando a estação repete o mesmo valor agora, 1 h e 3 h antes, enquanto outra do mesmo rio mudou 5 cm ou mais. A situação de cada fonte aparece em "Sobre os dados". Falta: Asthon, a regra de fonte reserva, a detecção de saltos impossíveis no coletor, a página `/saude` e o aviso no Telegram (este depende de você criar um bot no Telegram e me passar o token como segredo da Cloudflare).
 
 ### Fase 3: site público
 
