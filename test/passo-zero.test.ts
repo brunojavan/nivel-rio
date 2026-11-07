@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { gunzip, gzip } from '../src/gzip';
+import { conferirHistorico } from '../src/historico';
 
 describe('consultas do Estado', () => {
   // O Estado só aceita a consulta que o próprio site dele faz. Se alguém editar o arquivo
@@ -17,6 +19,27 @@ describe('consultas do Estado', () => {
     const q = readFileSync('src/consultas/estado-historico.graphql', 'utf8');
     expect(q.startsWith('query Historic($stationCode: String!')).toBe(true);
     expect(q).toContain('client: "secretaria-de-defesa-civil"');
+  });
+});
+
+describe('conferência do histórico', () => {
+  const amostra = new Uint8Array(gunzipSync(readFileSync('amostras/2026-11-07/estado-historico-DCSC-00013.json.gz')));
+
+  it('conta as leituras sem ler o JSON inteiro e bate com a leitura completa', () => {
+    const completo = JSON.parse(new TextDecoder().decode(amostra)).data.historic.items.length;
+    expect(conferirHistorico(amostra)).toEqual({ erro: null, itens: completo });
+  });
+
+  it('reconhece o bloqueio de consultas com mais de 90 dias', () => {
+    const bloqueio = new TextEncoder().encode(
+      '{"errors":[{"message":"Operação bloqueada.","extensions":{"code":"INTERNAL_SERVER_ERROR"}}],"data":{"historic":null}}',
+    );
+    expect(conferirHistorico(bloqueio).erro).toContain('Operação bloqueada');
+  });
+
+  it('conta respostas pequenas mesmo sem o campo ts (Barragem Norte)', () => {
+    const pequeno = new TextEncoder().encode('{"data":{"historic":{"items":[{"codigo":"DCSC-00042"},{"codigo":"DCSC-00042"}]}}}');
+    expect(conferirHistorico(pequeno)).toEqual({ erro: null, itens: 2 });
   });
 });
 

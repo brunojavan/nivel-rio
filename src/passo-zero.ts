@@ -5,6 +5,7 @@
 import CONSULTA_TAGS from './consultas/estado-tags-data.graphql';
 import CONSULTA_HISTORICO from './consultas/estado-historico.graphql';
 import { gzip } from './gzip';
+import { conferirHistorico } from './historico';
 
 export const URL_ESTADO = 'https://monitoramento.defesacivil.sc.gov.br/graphql';
 export const URL_ITAJAI = 'https://monitoramento.defesacivil.itajai.sc.gov.br/data/current/app.json';
@@ -167,15 +168,7 @@ export async function passoHistorico(env: Env, agora: string): Promise<void> {
     );
     let erro = r.erro;
     let itens: number | null = null;
-    if (!erro && r.corpo) {
-      try {
-        const d = JSON.parse(decoder.decode(r.corpo));
-        if (d?.errors?.length) erro = 'GraphQL: ' + JSON.stringify(d.errors).slice(0, 300);
-        else itens = d?.data?.historic?.items?.length ?? 0;
-      } catch {
-        erro = 'JSON inválido';
-      }
-    }
+    if (!erro && r.corpo) ({ erro, itens } = conferirHistorico(r.corpo));
     const id = await guardar(env, 'estado-historico', `${j.codigo} ${inicioIso} ${j.fim}`, agora, r, erro);
     await env.BRUTOS.prepare(
       `UPDATE fila_historico SET situacao = ?, tentativas = tentativas + 1, itens = ?, bruto_id = ?, atualizado_em = ?
