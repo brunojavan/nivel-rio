@@ -255,7 +255,7 @@ Decisões tomadas na implementação:
 
 Pronto quando, ao desligar uma fonte de propósito, o aviso chegar em menos de 1 hora.
 
-**Adiantado em 7 nov 2026:** a tabela de cotas com vigência já funciona (cada mudança de cota ganha uma linha nova com a data). O site já avisa "sem leitura nova" quando passa do dobro do intervalo normal e mostra "possível sensor travado" quando a estação repete o mesmo valor agora, 1 h e 3 h antes, enquanto outra do mesmo rio mudou 5 cm ou mais. A situação de cada fonte aparece em "Sobre os dados". Falta: Asthon, a regra de fonte reserva, a detecção de saltos impossíveis no coletor, a página `/saude` e o aviso no Telegram (este depende de você criar um bot no Telegram e me passar o token como segredo da Cloudflare).
+**Adiantado em 7 nov 2026:** a tabela de cotas com vigência já funciona (cada mudança de cota ganha uma linha nova com a data). O site já avisa "sem leitura nova" quando passa do dobro do intervalo normal e mostra "possível sensor travado" quando a estação repete o mesmo valor agora, 1 h e 3 h antes, enquanto outra do mesmo rio mudou 5 cm ou mais. A situação de cada fonte aparece em "Sobre os dados", e a página `/saude` mostra cada fonte nas últimas 24 horas, os erros recentes, o andamento do histórico do passo zero e o espaço usado. Falta: Asthon, a regra de fonte reserva, a detecção de saltos impossíveis no coletor e o aviso no Telegram (este depende de você criar um bot no Telegram e me passar o token como segredo da Cloudflare).
 
 ### Fase 3: site público
 
