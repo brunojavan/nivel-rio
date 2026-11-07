@@ -21,7 +21,6 @@ export const INICIO_HISTORICO = '2026-08-01T03:00:00.000Z';
 const LIMITE_DIAS = 90;
 const FOLGA_LIMITE_MS = 30 * 60_000;
 const JANELA_DIAS = 7;
-const JANELAS_POR_EXECUCAO = 1; // cada janela custa 6 a 8 ms de CPU só na compressão (medido em 7 nov 2026)
 const MAX_TENTATIVAS = 5;
 
 type Resposta = { status: number | null; corpo: Uint8Array | null; ms: number; erro: string | null };
@@ -140,42 +139,47 @@ async function criarFila(env: Env, agora: string): Promise<void> {
   console.log(JSON.stringify({ fonte: 'estado-historico', etapa: 'fila criada', estacoes: codigos.length, janelas: linhas.length }));
 }
 
-// Baixa algumas janelas do histórico por execução, das mais antigas para as mais novas,
+// Baixa uma janela do histórico por execução, das mais antigas para as mais novas,
 // porque as mais antigas são as primeiras a sumir do Estado.
+// As consultas usam o índice (situacao, inicio, codigo) e leem poucas linhas: o plano grátis do D1
+// permite 5 milhões de linhas lidas por dia na conta toda.
 export async function passoHistorico(env: Env, agora: string): Promise<void> {
   const criada = await env.BRUTOS.prepare(`SELECT valor FROM controle WHERE chave = 'fila_criada'`).first();
   if (!criada) return criarFila(env, agora);
 
   const limite = Date.parse(agora) - LIMITE_DIAS * 86_400_000 + FOLGA_LIMITE_MS;
-  const [, { results }] = await env.BRUTOS.batch<{ codigo: string; inicio: string; fim: string }>([
-    // Janelas que já saíram inteiras do alcance do Estado. (As datas ISO comparam bem como texto.)
-    env.BRUTOS.prepare(
-      `UPDATE fila_historico SET situacao = 'indisponivel', atualizado_em = ?
-       WHERE situacao IN ('pendente', 'erro') AND fim <= ?`,
-    ).bind(agora, new Date(limite).toISOString()),
-    env.BRUTOS.prepare(
-      `SELECT codigo, inicio, fim FROM fila_historico
-       WHERE situacao IN ('pendente', 'erro') AND tentativas < ?
-       ORDER BY inicio, codigo LIMIT ?`,
-    ).bind(MAX_TENTATIVAS, JANELAS_POR_EXECUCAO),
-  ]);
+  const limiteIso = new Date(limite).toISOString();
 
-  for (const j of results) {
-    const inicioIso = new Date(Math.max(Date.parse(j.inicio), limite)).toISOString();
-    const r = await baixar(
-      URL_ESTADO,
-      postGraphql('Historic', { stationCode: j.codigo, startDate: inicioIso, endDate: j.fim, interval: null }, CONSULTA_HISTORICO),
-    );
-    let erro = r.erro;
-    let itens: number | null = null;
-    if (!erro && r.corpo) ({ erro, itens } = conferirHistorico(r.corpo));
-    const id = await guardar(env, 'estado-historico', `${j.codigo} ${inicioIso} ${j.fim}`, agora, r, erro);
-    await env.BRUTOS.prepare(
-      `UPDATE fila_historico SET situacao = ?, tentativas = tentativas + 1, itens = ?, bruto_id = ?, atualizado_em = ?
-       WHERE codigo = ? AND inicio = ?`,
-    )
-      .bind(erro ? 'erro' : 'feito', itens, id, agora, j.codigo, j.inicio)
+  // Janelas que já saíram inteiras do alcance do Estado ficam na frente da fila: marca e segue.
+  let j: { codigo: string; inicio: string; fim: string } | null = null;
+  for (let i = 0; i < 20; i++) {
+    j = await env.BRUTOS.prepare(
+      `SELECT codigo, inicio, fim FROM fila_historico WHERE situacao = 'pendente' ORDER BY inicio, codigo LIMIT 1`,
+    ).first();
+    if (!j || j.fim > limiteIso) break;
+    await env.BRUTOS.prepare(`UPDATE fila_historico SET situacao = 'indisponivel', atualizado_em = ? WHERE codigo = ? AND inicio = ?`)
+      .bind(agora, j.codigo, j.inicio)
       .run();
-    if (erro) console.log(JSON.stringify({ fonte: 'estado-historico', codigo: j.codigo, inicio: j.inicio, erro }));
+    j = null;
   }
+  if (!j) return;
+
+  const inicioIso = new Date(Math.max(Date.parse(j.inicio), limite)).toISOString();
+  const r = await baixar(
+    URL_ESTADO,
+    postGraphql('Historic', { stationCode: j.codigo, startDate: inicioIso, endDate: j.fim, interval: null }, CONSULTA_HISTORICO),
+  );
+  let erro = r.erro;
+  let itens: number | null = null;
+  if (!erro && r.corpo) ({ erro, itens } = conferirHistorico(r.corpo));
+  const id = await guardar(env, 'estado-historico', `${j.codigo} ${inicioIso} ${j.fim}`, agora, r, erro);
+  await env.BRUTOS.prepare(
+    `UPDATE fila_historico
+     SET situacao = CASE WHEN ?1 IS NULL THEN 'feito' WHEN tentativas + 1 >= ?2 THEN 'erro' ELSE 'pendente' END,
+         tentativas = tentativas + 1, itens = ?3, bruto_id = ?4, atualizado_em = ?5
+     WHERE codigo = ?6 AND inicio = ?7`,
+  )
+    .bind(erro, MAX_TENTATIVAS, itens, id, agora, j.codigo, j.inicio)
+    .run();
+  if (erro) console.log(JSON.stringify({ fonte: 'estado-historico', codigo: j.codigo, inicio: j.inicio, erro }));
 }
