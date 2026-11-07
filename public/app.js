@@ -12,6 +12,13 @@ const GRUPOS = [
   { titulo: 'Afluentes e ribeirões', resto: true },
 ];
 
+// Pendências do catálogo (campo "conferir"), em texto para o público.
+const CONFERIR = {
+  rio: 'em qual rio fica a estação',
+  ordem: 'a posição da estação ao longo do rio',
+  municipio: 'o município da estação',
+};
+
 const NOMES_FAIXA = { normal: 'Normal', atencao: 'Atenção', alerta: 'Alerta', emergencia: 'Emergência' };
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
@@ -62,8 +69,10 @@ async function carregar() {
   try {
     const r = await fetch('/api/agora', { cache: 'no-cache' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const primeira = !dados;
     dados = await r.json();
-    desenhar();
+    if (primeira && location.hash.length > 1) abrirPeloEndereco();
+    else desenhar();
   } catch (e) {
     $('#atualizado').textContent = 'Não foi possível carregar os dados agora. Tentando de novo em instantes…';
     setTimeout(carregar, 30_000);
@@ -83,7 +92,7 @@ function desenhar() {
       const lista = dados.estacoes.filter((e) => !usados.has(e.id) && (g.resto || g.rios.includes(e.rio)));
       lista.forEach((e) => usados.add(e.id));
       lista.sort((a, b) => (g.rios ? g.rios.indexOf(a.rio) - g.rios.indexOf(b.rio) : (a.rio ?? '').localeCompare(b.rio ?? '')) || (a.ordem ?? 99) - (b.ordem ?? 99));
-      itens = lista.filter((e) => todas || e.principal).map((e) => ({ estacao: e }));
+      itens = lista.filter((e) => todas || e.principal || abertos.has(e.id)).map((e) => ({ estacao: e }));
     }
     if (!itens.length) continue;
 
@@ -239,11 +248,26 @@ function alternarDetalhe(art) {
     $('.detalhe', art).hidden = true;
     $('.detalhe', art).replaceChildren();
     $('.linha', art).setAttribute('aria-expanded', 'false');
+    if (location.hash === `#${id}`) history.replaceState(null, '', location.pathname + location.search);
   } else {
     abertos.add(id);
     abrirDetalhe(art, item);
+    // O endereço passa a apontar para a estação: dá para mandar o link de uma estação só.
+    history.replaceState(null, '', `#${id}`);
   }
 }
+
+// Link direto para uma estação (ex.: /#rio-do-sul): abre o gráfico dela e rola até lá.
+function abrirPeloEndereco() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (!id || !dados) return;
+  const existe = dados.estacoes.some((e) => e.id === id) || dados.barragens.some((b) => b.id === id);
+  if (!existe) return;
+  abertos.add(id);
+  desenhar();
+  document.querySelector(`.estacao[data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'start' });
+}
+window.addEventListener('hashchange', abrirPeloEndereco);
 
 function abrirDetalhe(art, item) {
   const det = $('.detalhe', art);
@@ -288,7 +312,7 @@ function abrirDetalhe(art, item) {
       li(`Cotas: ${partes.join(' · ')} (segundo ${c.fonte})`);
     } else li('Cotas: a fonte não publica cotas para esta estação.');
     if (item.referencia === 'altitude') li('Esta estação mede a altitude da água, não a régua: o número não se compara com o de outras estações.');
-    for (const c of item.a_conferir) li(`A confirmar: ${c}`);
+    for (const c of item.a_conferir) li(`A confirmar: ${CONFERIR[c] ?? c}`);
     li(`Fonte: ${item.fonte}`);
   }
   if (item.observacao) li(item.observacao);
