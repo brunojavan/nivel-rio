@@ -75,20 +75,31 @@ async function status(env: Env): Promise<Response> {
       env.BRUTOS.prepare(`SELECT * FROM resumo ORDER BY fonte`),
       env.BRUTOS.prepare(`SELECT situacao, COUNT(*) AS janelas, SUM(itens) AS itens FROM fila_historico GROUP BY situacao`),
     ]);
-    const [coletas, contagem, importacao] = await env.DB.batch([
+    const [coletas, contagem, importacao, fontes, ultimosErros] = await env.DB.batch([
       env.DB.prepare(
         `SELECT fonte, COUNT(*) AS execucoes, SUM(erro IS NOT NULL) AS erros, SUM(leituras_novas) AS novas, MAX(inicio) AS ultima
          FROM coletas WHERE inicio >= ? GROUP BY fonte`,
       ).bind(Math.floor(Date.now() / 1000) - 86_400),
       env.DB.prepare(`SELECT (SELECT COUNT(*) FROM coletas) AS coletas`),
       env.DB.prepare(`SELECT valor FROM controle WHERE chave = 'importacao'`),
+      env.DB.prepare(`SELECT id, nome, ativa, ultimo_sucesso, ultimo_erro, ultimo_erro_em FROM fontes`),
+      env.DB.prepare(`SELECT fonte, inicio, erro FROM coletas WHERE inicio >= ? AND erro IS NOT NULL ORDER BY inicio DESC LIMIT 10`).bind(
+        Math.floor(Date.now() / 1000) - 86_400,
+      ),
     ]);
+    const quando = (t: unknown) => (typeof t === 'number' ? isoDeUnix(t) : null);
     const imp = (importacao.results[0] as { valor?: string } | undefined)?.valor;
     return JSON.stringify({
       agora: new Date().toISOString(),
       versao: env.VERSAO,
       coletor: {
         ultimas_24h: (coletas.results as Array<Record<string, number | string>>).map((c) => ({ ...c, ultima: isoDeUnix(c.ultima as number) })),
+        fontes: (fontes.results as Array<Record<string, unknown>>).map((f) => ({
+          ...f,
+          ultimo_sucesso: quando(f.ultimo_sucesso),
+          ultimo_erro_em: quando(f.ultimo_erro_em),
+        })),
+        ultimos_erros: (ultimosErros.results as Array<Record<string, unknown>>).map((e) => ({ ...e, inicio: quando(e.inicio) })),
         importacao_passo_zero: imp ? JSON.parse(imp) : null,
       },
       passo_zero: { fontes: resumo.results, historico: { situacoes: fila.results }, banco_bytes: resumo.meta.size_after },

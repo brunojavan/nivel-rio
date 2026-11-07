@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nível Rio · saúde do coletor</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/estilo.css">
+  <style>
+    .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; margin-top: 16px; }
+    .cartao h2 { font-size: 1rem; margin: 0 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+    th { color: var(--suave); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .ok { color: var(--normal); font-weight: 600; }
+    .ruim { color: var(--emergencia); font-weight: 600; }
+    .barra { height: 10px; background: var(--linha); border-radius: 5px; overflow: hidden; margin: 8px 0; }
+    .barra > div { height: 100%; background: var(--destaque); width: 0; }
+    p { margin: 0 0 8px; }
+    .pequeno { font-size: .82rem; }
+  </style>
+</head>
+<body>
+<header class="topo">
+  <div class="largura">
+    <h1>Saúde do coletor</h1>
+    <p class="suave"><a href="/">← Nível Rio</a> · atualiza a cada minuto</p>
+  </div>
+</header>
+<main class="largura">
+  <section class="cartao">
+    <h2>Fontes</h2>
+    <table>
+      <thead><tr><th>Fonte</th><th>Última resposta</th><th class="num">24 h</th><th class="num">Erros</th></tr></thead>
+      <tbody id="fontes"><tr><td colspan="4" class="suave">Carregando…</td></tr></tbody>
+    </table>
+    <p class="suave pequeno" style="margin-top:8px">“24 h” é o número de execuções nas últimas 24 horas. “Tapa-buraco” é a conferência com o histórico do Estado.</p>
+  </section>
+
+  <section class="cartao">
+    <h2>Erros recentes</h2>
+    <div id="erros" class="suave pequeno">Carregando…</div>
+  </section>
+
+  <section class="cartao">
+    <h2>Histórico de 90 dias do Estado (passo zero)</h2>
+    <div class="barra"><div id="barra"></div></div>
+    <p id="download" class="suave pequeno">Carregando…</p>
+    <p id="importacao" class="suave pequeno"></p>
+  </section>
+
+  <section class="cartao">
+    <h2>Espaço usado</h2>
+    <p id="espaco" class="suave pequeno">Carregando…</p>
+  </section>
+
+  <p id="versao" class="suave rodape"></p>
+</main>
+<script>
+'use strict';
+const FUSO = 'America/Sao_Paulo';
+const NOMES = { estado: 'Defesa Civil de SC', itajai: 'Defesa Civil de Itajaí', alertablu: 'AlertaBlu', 'estado-historico': 'Tapa-buraco (histórico do Estado)', asthon: 'Asthon' };
+const ESPERADO_MIN = { estado: 5, itajai: 5, alertablu: 30, 'estado-historico': 5 };
+const hora = (iso) => (iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
+const mb = (b) => (b / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' MB';
+const el = (tag, texto, classe) => { const e = document.createElement(tag); if (texto != null) e.textContent = texto; if (classe) e.className = classe; return e; };
+
+async function carregar() {
+  let d;
+  try {
+    const r = await fetch('/api/status', { cache: 'no-cache' });
+    d = await r.json();
+  } catch {
+    const tr = el('tr');
+    tr.append(el('td', 'Não foi possível carregar. Tentando de novo em 1 minuto.', 'ruim'));
+    document.getElementById('fontes').replaceChildren(tr);
+    return;
+  }
+  const c = d.coletor;
+  const porFonte = new Map(c.ultimas_24h.map((x) => [x.fonte, x]));
+  const linhas = [];
+  for (const id of ['estado', 'itajai', 'alertablu', 'estado-historico']) {
+    const x = porFonte.get(id);
+    const tr = el('tr');
+    tr.append(el('td', NOMES[id] ?? id));
+    const idade = x ? (Date.now() - Date.parse(x.ultima)) / 60000 : Infinity;
+    const atrasada = idade > 2 * ESPERADO_MIN[id] + 2;
+    tr.append(el('td', x ? `${hora(x.ultima)} (${Math.round(idade)} min)` : 'nenhuma nas últimas 24 h', atrasada ? 'ruim' : 'ok'));
+    tr.append(el('td', x ? String(x.execucoes) : '0', 'num'));
+    tr.append(el('td', x ? String(x.erros) : '—', `num${x && x.erros ? ' ruim' : ''}`));
+    linhas.push(tr);
+  }
+  document.getElementById('fontes').replaceChildren(...linhas);
+
+  const erros = document.getElementById('erros');
+  if (!c.ultimos_erros?.length) erros.textContent = 'Nenhum erro nas últimas 24 horas.';
+  else {
+    const ul = el('ul');
+    for (const e of c.ultimos_erros) ul.append(el('li', `${hora(e.inicio)} · ${NOMES[e.fonte] ?? e.fonte}: ${e.erro}`));
+    erros.replaceChildren(ul);
+  }
+
+  const sit = Object.fromEntries((d.passo_zero.historico.situacoes ?? []).map((s) => [s.situacao, s]));
+  const feitas = sit.feito?.janelas ?? 0, pend = sit.pendente?.janelas ?? 0, indisp = sit.indisponivel?.janelas ?? 0, erro = sit.erro?.janelas ?? 0;
+  const total = feitas + pend + indisp + erro;
+  document.getElementById('barra').style.width = total ? `${(100 * (feitas + indisp + erro)) / total}%` : '0';
+  document.getElementById('download').textContent = !total
+    ? 'Fila de download ainda não criada.'
+    : pend
+    ? `Download: ${feitas} de ${total - indisp} janelas de 7 dias baixadas (${(sit.feito?.itens ?? 0).toLocaleString('pt-BR')} leituras). Faltam ${pend}; uma por vez, 12 por hora.`
+    : `Download concluído: ${feitas} janelas, ${(sit.feito?.itens ?? 0).toLocaleString('pt-BR')} leituras.${erro ? ` ${erro} janelas falharam.` : ''}`;
+  const imp = c.importacao_passo_zero;
+  document.getElementById('importacao').textContent = !imp
+    ? 'Importação para o banco definitivo: começa quando o download acabar.'
+    : imp.terminou_em
+      ? `Importação concluída em ${hora(imp.terminou_em)}: ${imp.linhas.toLocaleString('pt-BR')} linhas novas.`
+      : `Importação em andamento: ${imp.respostas} respostas ao vivo e ${imp.janelas} janelas do histórico, ${imp.linhas.toLocaleString('pt-BR')} linhas novas (hoje: ${imp.linhas_dia.toLocaleString('pt-BR')} gravadas, limite de 50 mil por dia).`;
+
+  document.getElementById('espaco').textContent =
+    `Banco definitivo: ${mb(d.banco_principal.bytes)}. Banco de brutos: ${mb(d.passo_zero.banco_bytes)}. Cada banco pode ter até 500 MB no plano grátis.`;
+  document.getElementById('versao').textContent = `Versão publicada em ${hora(d.versao?.timestamp)}.`;
+}
+carregar();
+setInterval(() => { if (document.visibilityState === 'visible') carregar(); }, 60_000);
+</script>
+</body>
+</html>
