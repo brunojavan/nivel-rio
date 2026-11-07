@@ -196,7 +196,7 @@ Para não perder mais dias enquanto as fases 0 e 1 não ficam prontas, dá para 
 
 Nada roda no seu computador, nem neste passo nem nos outros.
 
-### Fase 0: fundação
+### Fase 0: fundação (concluída em 7 nov 2026)
 
 O que você faz:
 - Criar uma conta gratuita na Cloudflare. Eu não posso criar contas por você.
@@ -208,7 +208,7 @@ O que eu faço:
 
 Pronto quando um push no GitHub publica uma página de teste no endereço workers.dev e o banco existe.
 
-**Situação em 7 nov 2026:** repositório `brunojavan/nivel-rio` (público) criado, Worker publicado, os dois bancos D1 criados com as tabelas, catálogo com 45 estações em `catalogo/estacoes.json` (21 com algum ponto marcado para conferir) e 9 testes passando. Falta ligar a publicação automática pelo GitHub (Workers Builds, no painel da Cloudflare) e confirmar com um push.
+**Situação em 7 nov 2026:** repositório `brunojavan/nivel-rio` (público) criado, Worker publicado, os dois bancos D1 criados com as tabelas, catálogo com 45 estações em `catalogo/estacoes.json` (21 com algum ponto marcado para conferir) e 9 testes passando. Publicação automática ligada (Workers Builds, comando `npm run deploy`, que aplica as migrações e publica): o push de teste das 18h49 de Brasília publicou sozinho em 20 segundos. **Fase 0 concluída em 7 nov 2026.** O app da Cloudflare no GitHub tem acesso só ao repositório nivel-rio.
 
 ### Fase 1: coletor das duas fontes principais
 
