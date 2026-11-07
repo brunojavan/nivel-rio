@@ -54,6 +54,8 @@ npm run typecheck    # confere os tipos
 npm run deploy       # publica na Cloudflare (normalmente é automático pelo GitHub)
 ```
 
+Para conferir se há buracos nas últimas 72 horas (critério da fase 1), veja `consultas/buracos.sql`.
+
 ## Fontes
 
 | Fonte | Uso |

@@ -98,7 +98,19 @@ function desenhar() {
   }
 
   situacaoGeral();
+  listarFontes();
   atualizarIdades();
+}
+
+function listarFontes() {
+  $('#fontes').replaceChildren(
+    ...dados.fontes.map((f) => {
+      const li = document.createElement('li');
+      li.textContent = f.ultimo_sucesso ? `${f.nome}: última resposta em ${hora(f.ultimo_sucesso)}` : `${f.nome}: ainda sem resposta`;
+      if (f.ultimo_erro_em && (!f.ultimo_sucesso || f.ultimo_erro_em > f.ultimo_sucesso)) li.textContent += ` (falhou em ${hora(f.ultimo_erro_em)})`;
+      return li;
+    }),
+  );
 }
 
 function novoCartao(id) {

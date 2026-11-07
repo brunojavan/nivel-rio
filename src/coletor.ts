@@ -7,7 +7,7 @@ import { principaisDaFonte } from './catalogo';
 import { lerAlertaBlu } from './fontes/alertablu';
 import { lerEstadoAoVivo, lerHistoricoEstado } from './fontes/estado';
 import { lerItajai } from './fontes/itajai';
-import { type Descarte, type Resultado } from './fontes/tipos';
+import type { Descarte, Resultado } from './fontes/tipos';
 import { baixar, postGraphql, URL_ALERTABLU, URL_ESTADO, URL_ITAJAI, type Resposta } from './rede';
 
 const decoder = new TextDecoder();
@@ -71,43 +71,54 @@ const ESTACOES_POR_EXECUCAO = 3;
 const PRIMEIRA_JANELA_S = 7 * 86_400;
 const MARGEM_S = 2 * 3600;
 
-export async function tapaBuraco(env: Env): Promise<boolean> {
+export async function tapaBuraco(env: Env): Promise<void> {
   const agora = Math.floor(Date.now() / 1000);
   const conferido = (await lerControle<Record<string, number>>(env.DB, 'tapa_buraco')) ?? {};
   const codigos = [...principaisDaFonte('estado').keys()]
     .sort((a, b) => (conferido[a] ?? 0) - (conferido[b] ?? 0))
     .slice(0, ESTACOES_POR_EXECUCAO);
 
-  let gravou = false;
-  for (const codigo of codigos) {
-    const inicio = Math.floor(Date.now() / 1000);
-    const de = conferido[codigo] ? Math.max(conferido[codigo] - MARGEM_S, agora - PRIMEIRA_JANELA_S) : agora - PRIMEIRA_JANELA_S;
-    const r = await baixar(
-      URL_ESTADO,
-      postGraphql(
-        'Historic',
-        { stationCode: codigo, startDate: new Date(de * 1000).toISOString(), endDate: new Date(agora * 1000).toISOString(), interval: null },
-        CONSULTA_HISTORICO,
-      ),
-    );
-    const { resultado, erro } = interpretar(r, (texto) => lerHistoricoEstado(texto, codigo));
-    let novas = 0;
-    if (resultado && !erro) {
-      const g = await gravar(env.DB, resultado, 'estado', 'tapa-buraco', inicio);
-      novas = g.leituras + g.barragens;
-      conferido[codigo] = agora;
-    } else if (erro === 'nenhuma leitura reconhecida') {
-      conferido[codigo] = agora; // estação sem dado no período (ex.: sensor parado); tenta de novo na próxima volta
+  // Baixa as estações em paralelo e grava tudo numa ida só ao banco (cada ida ao banco também gasta CPU).
+  const respostas = await Promise.all(
+    codigos.map(async (codigo) => {
+      const de = conferido[codigo] ? Math.max(conferido[codigo] - MARGEM_S, agora - PRIMEIRA_JANELA_S) : agora - PRIMEIRA_JANELA_S;
+      const r = await baixar(
+        URL_ESTADO,
+        postGraphql(
+          'Historic',
+          { stationCode: codigo, startDate: new Date(de * 1000).toISOString(), endDate: new Date(agora * 1000).toISOString(), interval: null },
+          CONSULTA_HISTORICO,
+        ),
+      );
+      return { codigo, ms: r.ms, ...interpretar(r, (texto) => lerHistoricoEstado(texto, codigo)) };
+    }),
+  );
+
+  const junto: Resultado = { leituras: [], barragens: [], comportas: [], cotas: [], descartes: [] };
+  const erros: string[] = [];
+  for (const r of respostas) {
+    if (r.resultado && !r.erro) {
+      junto.leituras.push(...r.resultado.leituras);
+      junto.barragens.push(...r.resultado.barragens);
+      junto.descartes.push(...r.resultado.descartes);
+      conferido[r.codigo] = agora;
+    } else if (r.erro === 'nenhuma leitura reconhecida') {
+      conferido[r.codigo] = agora; // estação sem dado no período (ex.: sensor parado); tenta de novo na próxima volta
     } else {
-      console.log(JSON.stringify({ fonte: 'estado-historico', codigo, erro }));
+      erros.push(`${r.codigo}: ${r.erro}`);
     }
-    if (novas) gravou = true;
-    await registrarColeta(
-      env.DB,
-      { fonte: 'estado-historico', inicio, duracao_ms: Date.now() - inicio * 1000, novas, descartadas: resultado?.descartes.length ?? 0, erro: erro && `${codigo}: ${erro}` },
-      false,
-    );
   }
-  await gravarControle(env.DB, 'tapa_buraco', conferido).run();
-  return gravou;
+  const g = await gravar(env.DB, junto, 'estado', 'tapa-buraco', agora);
+  if (erros.length) console.log(JSON.stringify({ fonte: 'estado-historico', erros }));
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO coletas (fonte, inicio, duracao_ms, leituras_novas, descartadas, erro) VALUES (?, ?, ?, ?, ?, ?)`).bind(
+      'estado-historico',
+      agora,
+      Math.max(...respostas.map((r) => r.ms)),
+      g.leituras + g.barragens,
+      junto.descartes.length,
+      erros.length ? erros.join('; ').slice(0, 500) : null,
+    ),
+    gravarControle(env.DB, 'tapa_buraco', conferido),
+  ]);
 }

@@ -114,28 +114,33 @@ export default {
     return json({ erro: 'não encontrado' }, 404);
   },
 
-  // Roda a cada minuto. Cada tarefa fica numa execução separada, por causa do limite de 10 ms de CPU.
+  // Roda a cada minuto, uma tarefa por minuto: o plano grátis dá 10 ms de CPU por execução, e cada ida ao
+  // banco também gasta CPU (medido em 7 nov 2026: coleta do Estado com o resumo junto, 24 a 36 ms).
   //   xx:02, xx:07, ...  resumo ao vivo do Estado (estações e barragens, com as comportas)
-  //   xx:04, xx:09, ...  Itajaí; em xx:14 e xx:44 também o AlertaBlu (Blumenau, de hora em hora)
-  //   xx:03, xx:08, ...  tapa-buraco com o histórico do Estado (3 estações por vez)
-  //   demais minutos     download do histórico do passo zero até acabar; depois, a importação dele
+  //   xx:03, xx:08, ...  monta o resumo do site (/api/agora) e confere se o catálogo mudou
+  //   xx:04, xx:09, ...  Itajaí (série de 12 h)
+  //   xx:00, xx:05, ...  tapa-buraco com o histórico do Estado (3 estações por vez)
+  //   xx:16 e xx:46      AlertaBlu (Blumenau mede de hora em hora e publica uns 10 min depois)
+  //   demais xx:01, ...  download do histórico do passo zero até acabar; depois, a importação dele
   async scheduled(controller, env): Promise<void> {
     const minuto = new Date(controller.scheduledTime).getUTCMinutes();
-    let mudou = await sincronizarCatalogo(env.DB);
     switch (minuto % 5) {
       case 2:
-        mudou = await coletar(env, 'estado');
-        break;
-      case 4:
-        mudou = await coletar(env, 'itajai');
-        if (minuto === 14 || minuto === 44) mudou = (await coletar(env, 'alertablu')) || mudou;
+        await coletar(env, 'estado');
         break;
       case 3:
-        mudou = await tapaBuraco(env);
+        await sincronizarCatalogo(env.DB);
+        await atualizarAgora(env.DB);
+        break;
+      case 4:
+        await coletar(env, 'itajai');
+        break;
+      case 0:
+        await tapaBuraco(env);
         break;
       default:
-        if (!(await passoHistorico(env, new Date().toISOString()))) mudou = await importarPassoZero(env);
+        if (minuto === 16 || minuto === 46) await coletar(env, 'alertablu');
+        else if (!(await passoHistorico(env, new Date().toISOString()))) await importarPassoZero(env);
     }
-    if (mudou) await atualizarAgora(env.DB);
   },
 } satisfies ExportedHandler<Env>;
