@@ -145,27 +145,22 @@ export async function passoHistorico(env: Env, agora: string): Promise<void> {
   const criada = await env.BRUTOS.prepare(`SELECT valor FROM controle WHERE chave = 'fila_criada'`).first();
   if (!criada) return criarFila(env, agora);
 
-  const { results } = await env.BRUTOS.prepare(
-    `SELECT codigo, inicio, fim FROM fila_historico
-     WHERE situacao IN ('pendente', 'erro') AND tentativas < ?
-     ORDER BY inicio, codigo LIMIT ?`,
-  )
-    .bind(MAX_TENTATIVAS, JANELAS_POR_EXECUCAO)
-    .all<{ codigo: string; inicio: string; fim: string }>();
-
   const limite = Date.parse(agora) - LIMITE_DIAS * 86_400_000 + FOLGA_LIMITE_MS;
+  const [, { results }] = await env.BRUTOS.batch<{ codigo: string; inicio: string; fim: string }>([
+    // Janelas que já saíram inteiras do alcance do Estado. (As datas ISO comparam bem como texto.)
+    env.BRUTOS.prepare(
+      `UPDATE fila_historico SET situacao = 'indisponivel', atualizado_em = ?
+       WHERE situacao IN ('pendente', 'erro') AND fim <= ?`,
+    ).bind(agora, new Date(limite).toISOString()),
+    env.BRUTOS.prepare(
+      `SELECT codigo, inicio, fim FROM fila_historico
+       WHERE situacao IN ('pendente', 'erro') AND tentativas < ?
+       ORDER BY inicio, codigo LIMIT ?`,
+    ).bind(MAX_TENTATIVAS, JANELAS_POR_EXECUCAO),
+  ]);
+
   for (const j of results) {
-    const inicio = Math.max(Date.parse(j.inicio), limite);
-    if (inicio >= Date.parse(j.fim)) {
-      // A janela inteira já saiu do alcance do Estado.
-      await env.BRUTOS.prepare(
-        `UPDATE fila_historico SET situacao = 'indisponivel', atualizado_em = ? WHERE codigo = ? AND inicio = ?`,
-      )
-        .bind(agora, j.codigo, j.inicio)
-        .run();
-      continue;
-    }
-    const inicioIso = new Date(inicio).toISOString();
+    const inicioIso = new Date(Math.max(Date.parse(j.inicio), limite)).toISOString();
     const r = await baixar(
       URL_ESTADO,
       postGraphql('Historic', { stationCode: j.codigo, startDate: inicioIso, endDate: j.fim, interval: null }, CONSULTA_HISTORICO),
