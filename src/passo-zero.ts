@@ -13,9 +13,12 @@ export const URL_ALERTABLU = 'https://defesacivil.blumenau.sc.gov.br/static/data
 const USER_AGENT = 'nivel-rio/0.1 (+https://github.com/brunojavan/nivel-rio)';
 const TIMEOUT_MS = 25_000;
 
-// Download único do histórico do Estado. Começa em 1º ago 2026, 0h de Brasília, para garantir
-// que nada do que o Estado ainda guarda fique de fora (ele mantém 2 a 3 meses).
+// Download único do histórico do Estado. A fila começa em 1º ago 2026, 0h de Brasília, mas o Estado
+// só aceita consultas que começam nos últimos 90 dias (responde "Operação bloqueada" antes disso;
+// medido em 7 nov 2026). Cada janela é cortada nesse limite na hora de baixar.
 export const INICIO_HISTORICO = '2026-08-01T03:00:00.000Z';
+const LIMITE_DIAS = 90;
+const FOLGA_LIMITE_MS = 30 * 60_000;
 const JANELA_DIAS = 7;
 const JANELAS_POR_EXECUCAO = 2;
 const MAX_TENTATIVAS = 5;
@@ -144,16 +147,28 @@ export async function passoHistorico(env: Env, agora: string): Promise<void> {
 
   const { results } = await env.BRUTOS.prepare(
     `SELECT codigo, inicio, fim FROM fila_historico
-     WHERE situacao != 'feito' AND tentativas < ?
+     WHERE situacao IN ('pendente', 'erro') AND tentativas < ?
      ORDER BY inicio, codigo LIMIT ?`,
   )
     .bind(MAX_TENTATIVAS, JANELAS_POR_EXECUCAO)
     .all<{ codigo: string; inicio: string; fim: string }>();
 
+  const limite = Date.parse(agora) - LIMITE_DIAS * 86_400_000 + FOLGA_LIMITE_MS;
   for (const j of results) {
+    const inicio = Math.max(Date.parse(j.inicio), limite);
+    if (inicio >= Date.parse(j.fim)) {
+      // A janela inteira já saiu do alcance do Estado.
+      await env.BRUTOS.prepare(
+        `UPDATE fila_historico SET situacao = 'indisponivel', atualizado_em = ? WHERE codigo = ? AND inicio = ?`,
+      )
+        .bind(agora, j.codigo, j.inicio)
+        .run();
+      continue;
+    }
+    const inicioIso = new Date(inicio).toISOString();
     const r = await baixar(
       URL_ESTADO,
-      postGraphql('Historic', { stationCode: j.codigo, startDate: j.inicio, endDate: j.fim, interval: null }, CONSULTA_HISTORICO),
+      postGraphql('Historic', { stationCode: j.codigo, startDate: inicioIso, endDate: j.fim, interval: null }, CONSULTA_HISTORICO),
     );
     let erro = r.erro;
     let itens: number | null = null;
@@ -166,7 +181,7 @@ export async function passoHistorico(env: Env, agora: string): Promise<void> {
         erro = 'JSON inválido';
       }
     }
-    const id = await guardar(env, 'estado-historico', `${j.codigo} ${j.inicio}`, agora, r, erro);
+    const id = await guardar(env, 'estado-historico', `${j.codigo} ${inicioIso} ${j.fim}`, agora, r, erro);
     await env.BRUTOS.prepare(
       `UPDATE fila_historico SET situacao = ?, tentativas = tentativas + 1, itens = ?, bruto_id = ?, atualizado_em = ?
        WHERE codigo = ? AND inicio = ?`,

@@ -66,7 +66,7 @@
   </section>
 
   <section class="cartao">
-    <h2>Histórico do Estado desde 1º de agosto</h2>
+    <h2>Histórico do Estado (últimos 90 dias)</h2>
     <div class="barra"><div id="barra"></div></div>
     <p id="historico" class="suave">Carregando…</p>
   </section>
@@ -134,14 +134,16 @@
 
     const h = s.passo_zero.historico;
     const sit = Object.fromEntries(h.situacoes.map((x) => [x.situacao, x]));
-    const total = h.situacoes.reduce((a, x) => a + x.janelas, 0);
+    const fora = sit.indisponivel?.janelas || 0;
+    const total = h.situacoes.reduce((a, x) => a + x.janelas, 0) - fora;
     const feitas = sit.feito?.janelas || 0;
     document.getElementById('barra').style.width = total ? `${(100 * feitas / total).toFixed(1)}%` : '0';
     document.getElementById('historico').textContent = !h.fila
       ? 'A lista de estações é montada na primeira execução livre do coletor.'
       : `${fmtNum.format(feitas)} de ${fmtNum.format(total)} janelas de 7 dias baixadas (${h.fila.estacoes} estações)` +
-        `, ${fmtNum.format(sit.feito?.itens || 0)} leituras` +
-        (sit.erro ? `. ${sit.erro.janelas} com erro, que serão tentadas de novo.` : '.');
+        `, ${fmtNum.format(sit.feito?.itens || 0)} leituras.` +
+        (sit.erro ? ` ${sit.erro.janelas} com erro, que serão tentadas de novo.` : '') +
+        (fora ? ` ${fora} janelas já estavam fora do alcance (o Estado só libera os últimos 90 dias).` : '');
 
     const bz = s.passo_zero.banco_bytes, bp = s.banco_principal.bytes;
     document.getElementById('espaco').textContent =
