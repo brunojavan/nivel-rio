@@ -84,6 +84,7 @@ type ItemHistorico = {
   ts?: string;
   timestamp?: string;
   rio_nivel?: unknown;
+  rio_nivel_arbitrario?: unknown; // Apiúna manda o nível com este nome (visto em 7 nov 2026)
   barramento_nivel?: unknown;
   barramento_porc?: unknown;
 };
@@ -118,9 +119,10 @@ export function lerHistoricoEstado(texto: string, codigo: string): Resultado {
         });
       continue;
     }
-    const c = conferirNivel(it.rio_nivel);
+    const valor = it.rio_nivel ?? it.rio_nivel_arbitrario;
+    const c = conferirNivel(valor);
     if ('nivel' in c) r.leituras.push({ estacao: est.id, t, nivel: c.nivel });
-    else if (c.motivo !== 'sem valor') r.descartes.push({ estacao: est.id, t, valor: it.rio_nivel, motivo: c.motivo });
+    else if (c.motivo !== 'sem valor') r.descartes.push({ estacao: est.id, t, valor, motivo: c.motivo });
   }
   return r;
 }

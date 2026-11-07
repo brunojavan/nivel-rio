@@ -4,160 +4,73 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nível Rio</title>
-  <meta name="description" content="Nível dos rios Itajaí-Açu e Itajaí-Mirim e das barragens da bacia. Em construção.">
+  <meta name="description" content="Nível dos rios Itajaí-Açu e Itajaí-Mirim e situação das barragens da bacia, com as comportas, a cada 5 minutos.">
+  <meta name="theme-color" content="#0b5cad">
   <link rel="icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/favicon@3x.png">
-  <style>
-    :root {
-      --fundo: #f6f7f9; --cartao: #ffffff; --texto: #16202a; --suave: #5b6876;
-      --linha: #dde2e8; --ok: #1a7f37; --erro: #c62828; --destaque: #0b5cad;
-      color-scheme: light dark;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --fundo: #0f1419; --cartao: #182029; --texto: #e6ebf0; --suave: #9aa7b4;
-        --linha: #2a3440; --ok: #4cc26a; --erro: #ff6b6b; --destaque: #6cb2ff;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--fundo); color: var(--texto);
-      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
-    main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
-    h1 { font-size: 1.6rem; margin: 0 0 4px; }
-    h2 { font-size: 1.05rem; margin: 0 0 12px; }
-    p { margin: 0 0 12px; }
-    .suave { color: var(--suave); font-size: .9rem; }
-    .cartao {
-      background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px;
-      padding: 16px; margin-top: 16px;
-    }
-    .aviso { border-left: 4px solid var(--destaque); }
-    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--linha); vertical-align: top; }
-    th { color: var(--suave); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
-    td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    .ok { color: var(--ok); font-weight: 600; }
-    .erro { color: var(--erro); font-weight: 600; }
-    .barra { height: 10px; background: var(--linha); border-radius: 5px; overflow: hidden; margin: 8px 0; }
-    .barra > div { height: 100%; background: var(--destaque); width: 0; transition: width .4s; }
-    a { color: var(--destaque); }
-    @media (max-width: 520px) { .some-no-celular { display: none; } }
-  </style>
+  <link rel="stylesheet" href="/vendor/uPlot.min.css">
+  <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
-<main>
-  <h1>Nível Rio</h1>
-  <p class="suave">Itajaí-Açu, Itajaí-Mirim e as barragens da bacia. Site em construção.</p>
+<header class="topo">
+  <div class="largura">
+    <h1>Nível Rio</h1>
+    <p class="suave">Rios Itajaí-Açu e Itajaí-Mirim e barragens da bacia, de cima para baixo.</p>
+  </div>
+</header>
 
-  <div class="cartao aviso">
-    <p><strong>Ainda não há dados para consulta aqui.</strong> Em caso de cheia, siga a Defesa Civil: telefone <strong>199</strong> e alertas por SMS no <strong>40199</strong> (mande o seu CEP).</p>
+<main class="largura">
+  <div class="aviso">
+    <strong>Este site não substitui a Defesa Civil.</strong>
+    Em emergência ligue <a href="tel:199"><strong>199</strong></a>. Alertas por SMS: mande o seu CEP para <strong>40199</strong>.
   </div>
 
-  <section class="cartao">
-    <h2>Coletor provisório</h2>
-    <p class="suave">Guarda as respostas das fontes desde já, para o histórico não começar do zero.</p>
-    <table>
-      <thead><tr><th>Fonte</th><th>Última coleta</th><th class="num">Coletas</th><th class="num some-no-celular">Erros</th></tr></thead>
-      <tbody id="fontes"><tr><td colspan="4" class="suave">Carregando…</td></tr></tbody>
-    </table>
-    <p id="ultimo-erro" class="suave" style="margin-top:12px"></p>
-  </section>
+  <div id="situacao-geral" class="situacao-geral" hidden></div>
 
-  <section class="cartao">
-    <h2>Histórico do Estado (últimos 90 dias)</h2>
-    <div class="barra"><div id="barra"></div></div>
-    <p id="historico" class="suave">Carregando…</p>
-  </section>
+  <div class="barra-ferramentas">
+    <span id="atualizado" class="suave">Carregando…</span>
+    <label class="alternar"><input type="checkbox" id="todas"> todas as estações</label>
+  </div>
 
-  <section class="cartao">
-    <h2>Espaço usado</h2>
-    <p id="espaco" class="suave">Carregando…</p>
-  </section>
+  <div id="conteudo">
+    <p class="suave">Carregando os dados…</p>
+  </div>
 
-  <p id="versao" class="suave" style="margin-top:16px"></p>
-  <p class="suave">Código aberto: <a href="https://github.com/brunojavan/nivel-rio">github.com/brunojavan/nivel-rio</a></p>
+  <details class="sobre" id="sobre">
+    <summary>Sobre os dados</summary>
+    <p>Os dados vêm de três fontes oficiais, consultadas a cada 5 minutos:</p>
+    <ul>
+      <li><strong>Defesa Civil de Santa Catarina</strong> (Rede Integrada de Monitoramento): estações da bacia e as três barragens, com o estado de cada comporta.</li>
+      <li><strong>Defesa Civil de Itajaí</strong>: as 11 estações da cidade e as cotas de cada uma.</li>
+      <li><strong>AlertaBlu</strong> (Defesa Civil de Blumenau): nível oficial de Blumenau, de hora em hora.</li>
+    </ul>
+    <p>Cada estação mostra o horário da sua última medição. Quando passa do dobro do intervalo normal sem leitura nova, aparece o aviso “sem leitura nova”. A tendência compara com a leitura de 1 hora antes.</p>
+    <p>As faixas (atenção, alerta, emergência) usam as cotas publicadas pela própria fonte. As de Rio do Sul ainda divergem entre as fontes e estão marcadas “a confirmar”.</p>
+    <p>Estações marcadas “altitude” medem a altura em relação ao nível do mar, e não na régua do rio: o número não se compara com o das outras.</p>
+    <p>Os dados pertencem às Defesas Civis. O projeto só guarda e mostra. Código aberto em <a href="https://github.com/brunojavan/nivel-rio">github.com/brunojavan/nivel-rio</a>.</p>
+  </details>
+
+  <p class="suave rodape">Primeira versão, em teste. <span id="versao"></span></p>
 </main>
 
-<script>
-  const NOMES = {
-    'estado': 'Estado (ao vivo)',
-    'estado-historico': 'Estado (histórico)',
-    'itajai': 'Itajaí',
-    'alertablu': 'AlertaBlu',
-  };
-  const fmtHora = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-  const fmtNum = new Intl.NumberFormat('pt-BR');
+<template id="tpl-estacao">
+  <article class="estacao">
+    <button class="linha" type="button" aria-expanded="false">
+      <span class="nome"><span class="titulo"></span><span class="local suave"></span></span>
+      <span class="valores">
+        <span class="nivel"></span>
+        <span class="tendencia"></span>
+      </span>
+      <span class="meta">
+        <span class="faixa"></span>
+        <span class="idade"></span>
+      </span>
+    </button>
+    <div class="detalhe" hidden></div>
+  </article>
+</template>
 
-  function ha(iso) {
-    if (!iso) return '—';
-    const min = Math.round((Date.now() - Date.parse(iso)) / 60000);
-    if (min < 1) return 'agora';
-    if (min < 60) return `há ${min} min`;
-    const h = Math.floor(min / 60);
-    return h < 48 ? `há ${h} h` : fmtHora.format(new Date(iso));
-  }
-  function mb(bytes) { return bytes == null ? '—' : `${(bytes / 1048576).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`; }
-  function el(tag, texto, classe) { const e = document.createElement(tag); e.textContent = texto; if (classe) e.className = classe; return e; }
-
-  async function atualizar() {
-    let s;
-    try {
-      const r = await fetch('/api/status', { cache: 'no-store' });
-      s = await r.json();
-    } catch (e) {
-      const tr = el('tr'); const td = el('td', 'Não consegui ler o status agora.', 'erro'); td.colSpan = 4; tr.append(td);
-      document.getElementById('fontes').replaceChildren(tr);
-      return;
-    }
-
-    const corpo = document.getElementById('fontes');
-    corpo.replaceChildren();
-    const fontes = s.passo_zero.fontes;
-    if (!fontes.length) {
-      const tr = el('tr'); const td = el('td', 'Nenhuma coleta ainda. A primeira acontece em até 5 minutos.', 'suave'); td.colSpan = 4; tr.append(td); corpo.append(tr);
-    }
-    let erroMaisRecente = null;
-    for (const f of fontes) {
-      const tr = el('tr');
-      const okRecente = f.ultimo_sucesso && f.ultimo_sucesso === f.ultima_coleta;
-      tr.append(el('td', NOMES[f.fonte] || f.fonte));
-      tr.append(el('td', `${okRecente ? '✓' : '✗'} ${ha(f.ultima_coleta)}`, okRecente ? 'ok' : 'erro'));
-      tr.append(el('td', fmtNum.format(f.coletas), 'num'));
-      tr.append(el('td', fmtNum.format(f.erros), 'num some-no-celular'));
-      corpo.append(tr);
-      if (f.ultimo_erro_em && (!erroMaisRecente || f.ultimo_erro_em > erroMaisRecente.em)) erroMaisRecente = { em: f.ultimo_erro_em, fonte: f.fonte, msg: f.ultimo_erro };
-    }
-    document.getElementById('ultimo-erro').textContent = erroMaisRecente
-      ? `Último erro: ${NOMES[erroMaisRecente.fonte] || erroMaisRecente.fonte}, ${ha(erroMaisRecente.em)}: ${erroMaisRecente.msg}`
-      : '';
-
-    const h = s.passo_zero.historico;
-    const sit = Object.fromEntries(h.situacoes.map((x) => [x.situacao, x]));
-    const fora = sit.indisponivel?.janelas || 0;
-    const total = h.situacoes.reduce((a, x) => a + x.janelas, 0) - fora;
-    const feitas = sit.feito?.janelas || 0;
-    document.getElementById('barra').style.width = total ? `${(100 * feitas / total).toFixed(1)}%` : '0';
-    document.getElementById('historico').textContent = !h.fila
-      ? 'A lista de estações é montada na primeira execução livre do coletor.'
-      : `${fmtNum.format(feitas)} de ${fmtNum.format(total)} janelas de 7 dias baixadas (${h.fila.estacoes} estações)` +
-        `, ${fmtNum.format(sit.feito?.itens || 0)} leituras.` +
-        (sit.erro ? ` ${sit.erro.janelas} com erro, que serão tentadas de novo.` : '') +
-        (fora ? ` ${fora} janelas já estavam fora do alcance (o Estado só libera os últimos 90 dias).` : '');
-
-    const bz = s.passo_zero.banco_bytes, bp = s.banco_principal.bytes;
-    document.getElementById('espaco').textContent =
-      `Respostas brutas: ${mb(bz)} de 500 MB. Banco definitivo: ${mb(bp)} de 500 MB.`;
-
-    const v = s.versao || {};
-    document.getElementById('versao').textContent = v.timestamp
-      ? `Versão publicada em ${fmtHora.format(new Date(v.timestamp))}${v.tag ? ` (${v.tag})` : ''}.`
-      : '';
-  }
-
-  atualizar();
-  setInterval(() => { if (!document.hidden) atualizar(); }, 60000);
-</script>
+<script src="/vendor/uPlot.iife.min.js" defer></script>
+<script src="/app.js" defer></script>
 </body>
 </html>

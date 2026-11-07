@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "typescript": "^7.0.2",
+    "uplot": "^1.6.32",
     "vitest": "^5.1.0",
     "wrangler": "^4.158.0"
   }

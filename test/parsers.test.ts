@@ -94,6 +94,11 @@ describe('Estado, histórico', () => {
     expect(lerHistoricoEstado(texto, 'DCSC-00042').barragens[0].t).toBe(paraUnix('2026-11-07T20:00:00Z'));
   });
 
+  it('aceita o nível com o nome rio_nivel_arbitrario (Apiúna)', () => {
+    const texto = '{"data":{"historic":{"items":[{"ts":"2026-11-07T18:00:00.000","codigo":"DCSC-00178","rio_nivel_arbitrario":83.98}]}}}';
+    expect(lerHistoricoEstado(texto, 'DCSC-00178').leituras).toEqual([{ estacao: 'apiuna', t: paraUnix('2026-11-07T21:00:00Z'), nivel: 83.98 }]);
+  });
+
   it('acusa o bloqueio de mais de 90 dias', () => {
     expect(() => lerHistoricoEstado('{"errors":[{"message":"Operação bloqueada."}],"data":{"historic":null}}', 'DCSC-00013')).toThrow(
       'Operação bloqueada',

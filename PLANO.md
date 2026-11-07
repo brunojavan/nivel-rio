@@ -55,6 +55,9 @@ As fontes 1 e 2 já cobrem quase tudo o que o projeto de 2023 tinha, e ainda acr
 - **O histórico do Estado não tem as comportas.** Ele guarda nível, chuva e cota das barragens, mas não o estado de cada comporta. A única forma de ter esse histórico é gravar o resumo ao vivo a cada 5 minutos, que é o que o passo zero já faz. (Visto em 7 nov 2026.)
 - **O Estado só libera os últimos 90 dias de histórico.** Uma consulta que começa antes disso volta com "Operação bloqueada" (medido em 7 nov 2026: 10 ago passava, 9 ago não). Não há dado mais antigo a recuperar depois que o dia sai da janela.
 - **CPU no plano grátis.** Comprimir uma resposta custa de 6 a 16 ms no servidor da Cloudflare, acima dos 10 ms do plano. Até agora nenhuma execução foi interrompida, mas é o primeiro ponto a olhar se uma coleta parar.
+- **Linhas lidas no plano grátis.** O D1 grátis permite 5 milhões de linhas lidas e 100 mil gravadas por dia, somando todos os bancos da conta. Em 7 nov à noite o passo zero varria a fila inteira do histórico a cada minuto (150 mil linhas lidas por hora) e teria estourado o limite no dia seguinte; um índice resolveu. Toda consulta nova precisa ler poucas linhas. A página `/api/status` mostra as coletas das últimas 24 horas.
+- **Apiúna manda o nível com outro nome no histórico** (`rio_nivel_arbitrario` em vez de `rio_nivel`). O parser aceita os dois.
+- **Algumas estações devolvem o histórico vazio para 7 dias e cheio para poucas horas** (Arraial dos Cunhas, 7 nov 2026). O tapa-buraco tenta de novo com uma janela curta.
 - **O histórico do Estado devolve o horário de Brasília sem indicar o fuso.** Uma consulta de 1º set 0h UTC volta com o primeiro ponto em "2026-08-31T21:10". O parser da fase 1 precisa somar 3 horas.
 - **AlertaBlu: só foi encontrado o nível oficial de hora em hora** (`nivel_oficial.json`, série de 24 h). A leitura de 5 em 5 minutos da Ponte Adolfo Konder não foi localizada na revisão de 7 nov à noite. A fase 2 procura de novo.
 
@@ -152,7 +155,7 @@ Tudo roda na nuvem, sem servidor para manter e sem depender do seu computador li
 - **TypeScript** em tudo: coletor, API e site.
 - **Wrangler**, a ferramenta oficial da Cloudflare para publicar.
 - **Vitest** para testes. Cada fonte terá amostras reais salvas no repositório, e o teste confirma que o parser continua entendendo a amostra.
-- **Site em Vite + TypeScript, com gráficos em uPlot.** É uma biblioteca de gráficos de série temporal com cerca de 50 KB, que abre rápido no celular.
+- **Site em HTML, CSS e JavaScript puros, com gráficos em uPlot.** O uPlot é uma biblioteca de gráficos de série temporal com cerca de 50 KB, que abre rápido no celular; fica copiado em `public/vendor/`. O plano original previa Vite + TypeScript; para pôr a primeira versão no ar em um dia, o site ficou sem etapa de build. Dá para migrar depois se o código crescer.
 
 ## Modelo de dados
 
@@ -210,7 +213,7 @@ Pronto quando um push no GitHub publica uma página de teste no endereço worker
 
 **Situação em 7 nov 2026:** repositório `brunojavan/nivel-rio` (público) criado, Worker publicado, os dois bancos D1 criados com as tabelas, catálogo com 45 estações em `catalogo/estacoes.json` (21 com algum ponto marcado para conferir) e 9 testes passando. Publicação automática ligada (Workers Builds, comando `npm run deploy`, que aplica as migrações e publica): o push de teste das 18h49 de Brasília publicou sozinho em 20 segundos. **Fase 0 concluída em 7 nov 2026.** O app da Cloudflare no GitHub tem acesso só ao repositório nivel-rio.
 
-### Fase 1: coletor das duas fontes principais
+### Fase 1: coletor das duas fontes principais (no ar desde 7 nov 2026)
 
 - Um parser para o Estado e um para Itajaí, cada um testado com amostras reais salvas.
 - Execução a cada 5 minutos (xx:02, xx:07…), gravando cada leitura pelo horário da medição, sem duplicar, e registrando cada coleta no log.
@@ -220,9 +223,28 @@ Pronto quando um push no GitHub publica uma página de teste no endereço worker
 
 Pronto quando o coletor rodar 72 horas sozinho sem nenhum buraco maior que 20 minutos nas estações ativas.
 
+**Situação em 7 nov 2026, 19h de Brasília:** no ar. A primeira coleta do Estado (19h07) gravou 29 níveis, as 3 barragens e 15 comportas. O que roda em cada minuto:
+
+| Minuto | Tarefa |
+|---|---|
+| xx:02, xx:07… | Resumo ao vivo do Estado: estações, barragens e comportas |
+| xx:04, xx:09… | Itajaí (série de 12 h); em xx:14 e xx:44 também o AlertaBlu |
+| xx:03, xx:08… | Tapa-buraco: histórico do Estado, 3 estações por vez, cada uma perto de uma vez por hora. Na primeira passada, cada estação busca 7 dias, para o site abrir com uma semana de gráfico |
+| demais | Termina o download do histórico do passo zero (fila do Estado, até 9 nov); depois importa tudo para o banco definitivo |
+
+Decisões tomadas na implementação:
+
+- **O AlertaBlu entrou já na fase 1**, para Blumenau não ficar sem dado no site. O certificado incompleto não atrapalha quando a consulta parte da Cloudflare. As cotas de Blumenau vêm da própria resposta (atenção 4 m, alerta 6 m, alerta máximo 8 m).
+- **A resposta bruta só é guardada quando algo dá errado** (a fonte falha ou o parser não entende). Com isso o banco de brutos parou de crescer 12 MB por dia; o risco de enchê-lo em dezembro acabou.
+- **Ponto do histórico só entra onde não há leitura a menos de 5 minutos.** A série ao vivo (de 5 em 5 minutos) e a do histórico (de 10 em 10) não se misturam; o histórico só preenche buraco.
+- **Descartes:** o valor 21474836, níveis negativos (menos em Itajaí, onde a maré pode levar o nível abaixo de zero) e leituras que o próprio Estado marca como inválidas. Cada coleta conta os descartes no log. Saltos de vários metros em 10 minutos ainda não são detectados (fase 2).
+- **Cotas:** o Estado não publica cotas no resumo ao vivo. Para Rio do Sul e Brusque o site usa as cotas que a Defesa Civil de Itajaí publica para essas estações, com a origem indicada. As de Rio do Sul aparecem marcadas "a confirmar".
+- **Importação com limite diário:** no máximo 50 mil linhas gravadas por dia, para a coleta normal (perto de 12 mil por dia) nunca ficar sem espaço no limite de 100 mil. O histórico de 9 ago a 31 out deve terminar de entrar por volta de 18 nov.
+- **O catálogo é copiado para o banco sozinho**: quando `catalogo/estacoes.json` muda, a execução seguinte atualiza a tabela `estacoes`.
+
 ### Fase 2: mais fontes e saúde do coletor
 
-- AlertaBlu (resolvendo o certificado) e Asthon para Rio do Sul. Taió, Gaspar e Ituporanga entram só se acrescentarem algo que o Estado não tenha.
+- Asthon para Rio do Sul (o AlertaBlu já entrou na fase 1). Taió, Gaspar e Ituporanga entram só se acrescentarem algo que o Estado não tenha.
 - Tabela de cotas com vigência e a regra de fonte principal e reserva funcionando.
 - Detecção de dado atrasado e de sensor quebrado.
 - Página `/saude` com a situação de cada fonte, e mensagem no seu Telegram quando uma fonte ficar mais de 1 hora sem responder.
@@ -246,6 +268,16 @@ Telas:
 O site é pensado primeiro para o celular, que é onde o pessoal olha durante uma cheia.
 
 Pronto quando a tela inicial abrir em menos de 2 segundos num 4G e mostrar dados com menos de 15 minutos.
+
+**Primeira versão antecipada para 8 nov 2026**, a seu pedido, junto com a fase 1. Já tem:
+
+- tela inicial com as barragens (ocupação, nível e cada comporta) e as estações agrupadas de cima para baixo: Alto Vale, Itajaí-Açu, Itajaí-Mirim e afluentes. Por padrão mostra as estações principais; uma opção mostra todas;
+- em cada estação: nível, faixa (quando a fonte publica cotas), tendência em cm por hora comparada com 1 hora antes, e há quanto tempo foi medida, com o aviso "sem leitura nova" quando passa do dobro do intervalo normal;
+- faixa de aviso no topo com as estações em alerta ou emergência, e outra quando os dados param de atualizar;
+- gráfico de 24 h, 3 dias e 7 dias ao tocar na estação, com as cotas desenhadas e buraco onde não houve medição;
+- "Sobre os dados" no fim da página e o aviso da Defesa Civil (199 e SMS 40199) no topo.
+
+Falta para fechar a fase 3: gráfico de 30 dias (o histórico importado chega até lá por volta de 18 nov), página separada por estação com endereço próprio, gráfico da ocupação das barragens com o histórico das comportas, medir o tempo de abertura num 4G de verdade e o contato com as Defesas Civis antes de divulgar.
 
 ### Fase 4: alertas
 
