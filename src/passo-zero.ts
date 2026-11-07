@@ -21,7 +21,7 @@ export const INICIO_HISTORICO = '2026-08-01T03:00:00.000Z';
 const LIMITE_DIAS = 90;
 const FOLGA_LIMITE_MS = 30 * 60_000;
 const JANELA_DIAS = 7;
-const JANELAS_POR_EXECUCAO = 2;
+const JANELAS_POR_EXECUCAO = 1; // cada janela custa 6 a 8 ms de CPU só na compressão (medido em 7 nov 2026)
 const MAX_TENTATIVAS = 5;
 
 type Resposta = { status: number | null; corpo: Uint8Array | null; ms: number; erro: string | null };
