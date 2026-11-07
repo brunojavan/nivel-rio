@@ -12,7 +12,7 @@ O histórico é o centro do projeto, porque as fontes oficiais guardam pouco:
 |---|---|
 | Defesa Civil de Itajaí | 12 horas |
 | AlertaBlu (Blumenau) | 24 horas |
-| Defesa Civil de SC | cerca de 2 a 3 meses |
+| Defesa Civil de SC | 90 dias, numa janela que anda (a consulta que começa antes disso é recusada) |
 
 Para comparar uma cheia com a anterior, ou medir quanto tempo a água leva de Rio do Sul até Itajaí, alguém precisa ter guardado os dados. Esse alguém vai ser o projeto.
 
@@ -24,7 +24,7 @@ Todas as fontes abaixo foram testadas com requisições reais a partir de um com
 
 | # | Fonte | O que cobre | Formato | Atualiza | Histórico | Papel |
 |---|---|---|---|---|---|---|
-| 1 | Defesa Civil SC, Rede Integrada de Monitoramento (`monitoramento.defesacivil.sc.gov.br/graphql`) | As 3 barragens (nível, % de ocupação, volume, vertedouro e o estado de cada comporta) e cerca de 13 estações de rio na bacia: Rio do Sul, Taió, Ituporanga, José Boiteux, Ibirama, Apiúna, Indaial, Timbó, Ilhota, Brusque, Botuverá e Guabiruba. Também tem chuva. | JSON (GraphQL, sem login) | 1 min ao vivo; 10 min no histórico | desde 1º set 2026, em passos de 10 min ou de 1 h | principal |
+| 1 | Defesa Civil SC, Rede Integrada de Monitoramento (`monitoramento.defesacivil.sc.gov.br/graphql`) | As 3 barragens (nível, % de ocupação, volume, vertedouro e o estado de cada comporta) e cerca de 13 estações de rio na bacia: Rio do Sul, Taió, Ituporanga, José Boiteux, Ibirama, Apiúna, Indaial, Timbó, Ilhota, Brusque, Botuverá e Guabiruba. Também tem chuva. | JSON (GraphQL, sem login) | 1 min ao vivo; 10 min no histórico | últimos 90 dias, em passos de 10 min ou de 1 h | principal |
 | 2 | Defesa Civil de Itajaí (`monitoramento.defesacivil.itajai.sc.gov.br/data/current/app.json`) | As 11 estações da cidade (DC01 a DC11), chuva e cotas de cada estação. Também copia Rio do Sul, Brusque, Blumenau e as barragens, mas essas cópias não serão usadas (ver "Frequência de coleta"). | JSON estático, sem login | 10 min | 12 h | principal para Itajaí |
 | 3 | AlertaBlu, Blumenau (`defesacivil.blumenau.sc.gov.br/static/data/`) | Ponte Adolfo Konder e as cotas oficiais de Blumenau. Também copia cerca de 27 estações do Estado. | JSON estático | 5 min / 1 h | 24 h | reserva |
 | 4 | Asthon, a empresa que atende Rio do Sul (`public.asthon.com.br`) | 24 estações em Rio do Sul, com consulta de histórico por período | JSON | 10 min | desde set 2026 | complemento |
@@ -53,6 +53,8 @@ As fontes 1 e 2 já cobrem quase tudo o que o projeto de 2023 tinha, e ainda acr
 - **O certificado de segurança do site de Blumenau está incompleto.** Navegadores aceitam, mas programas costumam recusar. Vamos precisar contornar isso ou usar a cópia de Blumenau que vem no arquivo de Itajaí.
 - **O Estado só aceita a consulta exata que o próprio site dele faz.** Se eles mudarem essa consulta, a nossa para de funcionar até ser ajustada. O aviso de falha da fase 2 cobre esse caso. As duas consultas (`Tags_data` e `Historic`) estão copiadas em `src/consultas/`.
 - **O histórico do Estado não tem as comportas.** Ele guarda nível, chuva e cota das barragens, mas não o estado de cada comporta. A única forma de ter esse histórico é gravar o resumo ao vivo a cada 5 minutos, que é o que o passo zero já faz. (Visto em 7 nov 2026.)
+- **O Estado só libera os últimos 90 dias de histórico.** Uma consulta que começa antes disso volta com "Operação bloqueada" (medido em 7 nov 2026: 10 ago passava, 9 ago não). Não há dado mais antigo a recuperar depois que o dia sai da janela.
+- **CPU no plano grátis.** Comprimir uma resposta custa de 6 a 16 ms no servidor da Cloudflare, acima dos 10 ms do plano. Até agora nenhuma execução foi interrompida, mas é o primeiro ponto a olhar se uma coleta parar.
 - **O histórico do Estado devolve o horário de Brasília sem indicar o fuso.** Uma consulta de 1º set 0h UTC volta com o primeiro ponto em "2026-08-31T21:10". O parser da fase 1 precisa somar 3 horas.
 - **AlertaBlu: só foi encontrado o nível oficial de hora em hora** (`nivel_oficial.json`, série de 24 h). A leitura de 5 em 5 minutos da Ponte Adolfo Konder não foi localizada na revisão de 7 nov à noite. A fase 2 procura de novo.
 
@@ -76,7 +78,7 @@ Medido em 7 de novembro de 2026, entre 16h40 e 17h30. As fontes foram consultada
 
 | Fonte | Intervalo entre medições | Tempo até aparecer na fonte | Guarda série? |
 |---|---|---|---|
-| Estado: estações de rio e barragens Sul e Oeste | 1 min ao vivo; o histórico guarda uma a cada 10 min | menos de 1 min | o ao vivo mostra só a última; o histórico guarda 2 a 3 meses |
+| Estado: estações de rio e barragens Sul e Oeste | 1 min ao vivo; o histórico guarda uma a cada 10 min | menos de 1 min | o ao vivo mostra só a última; o histórico guarda 90 dias |
 | Estado: Barragem Norte | duas vezes por dia, às 7h e às 17h (leitura manual) | na hora | sim |
 | Itajaí: 11 estações da cidade | 10 min | 2,5 a 6 min | 12 h |
 | AlertaBlu: Ponte Adolfo Konder (leitura bruta) | 5 min | 3 a 6 min | não, só a última |
@@ -182,7 +184,7 @@ Regras de gravação:
 | Resumo ao vivo do Estado (todas as estações de SC, barragens e comportas) | xx:02, xx:07, … | cerca de 38 KB por coleta, 11 MB por dia |
 | `app.json` de Itajaí (série de 12 h) | xx:04 e xx:34 | cerca de 21 KB, 1 MB por dia |
 | Nível oficial do AlertaBlu (série de 24 h) | xx:14 e xx:44 | menos de 1 KB |
-| Histórico do Estado desde 1º ago 2026, em janelas de 7 dias, para as estações da bacia do Itajaí e as 3 barragens | nos outros minutos, 2 janelas por vez, até acabar (cerca de 10 horas) | cerca de 25 MB no total |
+| Histórico do Estado desde 1º ago 2026, em janelas de 7 dias, para as estações da bacia do Itajaí e as 3 barragens | nos outros minutos, 1 janela por vez, até acabar (cerca de 20 horas, terminando em 8 nov à tarde) | cerca de 25 MB no total |
 
 Com cerca de 12 MB por dia, o banco de brutos chega ao limite de 500 MB em uns 40 dias. **A fase 1 precisa importar esses dados e desligar o provisório antes disso** (por volta de 15 de dezembro de 2026). A página inicial mostra o espaço usado.
 
@@ -214,7 +216,7 @@ Pronto quando um push no GitHub publica uma página de teste no endereço worker
 - Execução a cada 5 minutos (xx:02, xx:07…), gravando cada leitura pelo horário da medição, sem duplicar, e registrando cada coleta no log.
 - Do Estado: o resumo ao vivo a cada 5 minutos e, uma vez por hora, o histórico para tapar buracos.
 - Importação do histórico do Estado desde 1º de setembro e dos arquivos do passo zero.
-- Isso precisa sair logo. O histórico do Estado cobre só cerca de 2 a 3 meses, então setembro deve deixar de estar disponível por volta de dezembro.
+- O histórico do Estado só alcança os últimos 90 dias. O passo zero está baixando tudo o que existia em 7 nov 2026 (desde 9 ago), então a urgência agora é outra: importar os brutos antes de o banco provisório encher (por volta de 15 dez).
 
 Pronto quando o coletor rodar 72 horas sozinho sem nenhum buraco maior que 20 minutos nas estações ativas.
 
