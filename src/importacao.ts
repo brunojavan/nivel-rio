@@ -11,7 +11,7 @@ import { lerAlertaBlu } from './fontes/alertablu';
 import { lerEstadoAoVivo, lerHistoricoEstado } from './fontes/estado';
 import { lerItajai } from './fontes/itajai';
 import type { Resultado } from './fontes/tipos';
-import { gunzip } from './gzip';
+import { bytesDoBanco, gunzip } from './gzip';
 
 export const ORCAMENTO_DIA = 50_000;
 
@@ -65,11 +65,11 @@ export async function importarPassoZero(env: Env): Promise<boolean> {
          ORDER BY coletado_em LIMIT 1`,
       )
         .bind(fonte, s.cursor[fonte] ?? '')
-        .first<{ coletado_em: string; gzip: ArrayBuffer }>();
+        .first<{ coletado_em: string; gzip: unknown }>();
       if (!b) continue;
       achou = true;
       try {
-        const r = ler(decoder.decode(await gunzip(b.gzip)));
+        const r = ler(decoder.decode(await gunzip(bytesDoBanco(b.gzip))));
         const g = await gravar(env.DB, r, fonte, 'medicao', Math.floor(Date.parse(b.coletado_em) / 1000));
         gravadas += g.linhas_gravadas;
         novas += g.leituras + g.barragens + g.comportas;
@@ -99,10 +99,10 @@ export async function importarPassoZero(env: Env): Promise<boolean> {
       let importado = 0;
       if (estacoes.has(j.codigo)) {
         feito = true;
-        const b = await env.BRUTOS.prepare(`SELECT gzip FROM brutos WHERE id = ?`).bind(j.bruto_id).first<{ gzip: ArrayBuffer | null }>();
+        const b = await env.BRUTOS.prepare(`SELECT gzip FROM brutos WHERE id = ?`).bind(j.bruto_id).first<{ gzip: unknown }>();
         if (b?.gzip) {
           try {
-            const r = lerHistoricoEstado(decoder.decode(await gunzip(b.gzip)), j.codigo);
+            const r = lerHistoricoEstado(decoder.decode(await gunzip(bytesDoBanco(b.gzip))), j.codigo);
             const g = await gravar(env.DB, r, 'estado', 'tapa-buraco', Math.floor(Date.now() / 1000));
             gravadas += g.linhas_gravadas;
             novas += g.leituras + g.barragens;

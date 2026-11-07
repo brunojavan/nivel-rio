@@ -228,9 +228,13 @@ Pronto quando o coletor rodar 72 horas sozinho sem nenhum buraco maior que 20 mi
 | Minuto | Tarefa |
 |---|---|
 | xx:02, xx:07… | Resumo ao vivo do Estado: estações, barragens e comportas |
-| xx:04, xx:09… | Itajaí (série de 12 h); em xx:14 e xx:44 também o AlertaBlu |
-| xx:03, xx:08… | Tapa-buraco: histórico do Estado, 3 estações por vez, cada uma perto de uma vez por hora. Na primeira passada, cada estação busca 7 dias, para o site abrir com uma semana de gráfico |
-| demais | Termina o download do histórico do passo zero (fila do Estado, até 9 nov); depois importa tudo para o banco definitivo |
+| xx:03, xx:08… | Monta o resumo que o site lê (`/api/agora`) e confere se o catálogo mudou |
+| xx:04, xx:09… | Itajaí (série de 12 h) |
+| xx:00, xx:05… | Tapa-buraco: histórico do Estado, 3 estações por vez, cada uma perto de uma vez por hora. Na primeira passada, cada estação busca 7 dias, para o site abrir com uma semana de gráfico |
+| xx:16 e xx:46 | AlertaBlu (Blumenau mede de hora em hora e publica uns 10 minutos depois) |
+| demais xx:01, xx:06… | Termina o download do histórico do passo zero (fila do Estado, até 10 nov); depois importa tudo para o banco definitivo |
+
+Uma tarefa por minuto por causa da CPU: na primeira versão, a coleta do Estado montava o resumo do site na mesma execução e gastava 24 a 36 ms, e o tapa-buraco 36 ms, contra 10 ms do plano grátis. A Cloudflare não interrompeu nenhuma, mas não dá para contar com essa tolerância.
 
 Decisões tomadas na implementação:
 
