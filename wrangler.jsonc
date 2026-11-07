@@ -1,0 +1,52 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nivel-rio",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+
+  // Site estático (pasta public/). Só /api/* passa pelo código do Worker.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Roda a cada minuto. O código decide o que fazer em cada minuto
+  // (ver src/index.ts): coleta do Estado em xx:02, xx:07, ...;
+  // Itajaí e AlertaBlu duas vezes por hora; nos minutos livres, o histórico.
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
+
+  "d1_databases": [
+    {
+      // Banco definitivo: estações, cotas, leituras, barragens, comportas, coletas.
+      "binding": "DB",
+      "database_name": "nivel-rio",
+      "database_id": "fda83bf1-3c79-44b7-87a9-b856ca93492a",
+      "migrations_dir": "migrations"
+    },
+    {
+      // Passo zero: respostas brutas das fontes, comprimidas.
+      // Provisório: some quando o coletor da fase 1 importar tudo.
+      "binding": "BRUTOS",
+      "database_name": "nivel-rio-brutos",
+      "database_id": "b07d9069-9325-4eae-94cd-7901cd0d0a38",
+      "migrations_dir": "migrations-brutos"
+    }
+  ],
+
+  // As consultas do Estado ficam em arquivos .graphql, iguais às do site deles.
+  "rules": [
+    { "type": "Text", "globs": ["**/*.graphql"], "fallthrough": true }
+  ],
+
+  // Identifica a versão publicada (aparece na página de teste).
+  "version_metadata": {
+    "binding": "VERSAO"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,556 @@
+query Tags_data {
+    tags_data(clients: ["secretaria-de-defesa-civil"]) {
+      qualle_meteorologia {
+        codigo
+        name {
+          prefix
+          general
+          local
+        }
+        show
+        timestamp
+        position {
+          bacia
+          latitude
+          longitude
+          regiao
+          altitude
+        }
+        data {
+          rio {
+            rio_nome {
+              value
+            }
+            rio_nivel {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            rio_nivel_tendencia {
+              value
+              show { value }
+            }
+            rio_area_drenagem {
+              value
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+          }
+          chuva {
+            acumulado {
+              min005 { value show { value } format { value } unit { value } }
+              h001 { value show { value } format { value } unit { value } }
+              h003 { value show { value } format { value } unit { value } }
+              h006 { value show { value } format { value } unit { value } }
+              h012 { value show { value } format { value } unit { value } }
+              h024 { value show { value } format { value } unit { value } }
+              h168 { value show { value } format { value } unit { value } }
+              s015 { value show { value } format { value } unit { value } }
+              min010 { value show { value } format { value } unit { value } }
+              min015 { value show { value } format { value } unit { value } }
+              h048 { value show { value } format { value } unit { value } }
+              h072 { value show { value } format { value } unit { value } }
+              h096 { value show { value } format { value } unit { value } }
+              h120 { value show { value } format { value } unit { value } }
+              h144 { value show { value } format { value } unit { value } }
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+          }
+          pressaoatmos {
+            atual {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            tendencia {
+              value
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+            historico {
+              h001 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+              h168 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+            }
+          }
+          senstermica {
+            atual {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            historico {
+              h001 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+              h168 {
+                maxima {
+                  value
+                }
+                minima {
+                  value
+                }
+                media {
+                  value
+                }
+              }
+            }
+            tendencia {
+              value
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+          }
+          temperatura {
+            atual {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            historico {
+              h001 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+              h168 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+            }
+            tendencia {
+              value
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+          }
+          umidade {
+            atual {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            tendencia {
+              value
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+            historico {
+              h001 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+              h168 {
+                maxima {
+                  value
+                }
+                media {
+                  value
+                }
+                minima {
+                  value
+                }
+              }
+            }
+          }
+          vento {
+            direcao {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            velocidade_maxima {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            velocidade_media {
+              value
+              show { value }
+              format { value }
+              unit { value }
+            }
+            homologacao {
+              relacao {
+                valido {
+                  value
+                }
+              }
+            }
+          }
+          barramento {
+            nivel {
+              percentual {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+              montante {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+              jusante {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+              vertido {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+            }
+            capacidade {
+              atual {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+              maxima {
+                value
+                show { value }
+                format { value }
+                unit { value }
+              }
+            }
+            comportas {
+              comporta_1 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_2 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_3 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_4 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_5 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_6 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_7 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_8 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_9 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+              comporta_10 {
+                estado {
+                  value
+                }
+                habilitada {
+                  value
+                }
+                nome {
+                  value
+                  label {
+                    value
+                  }
+                  show {
+                    value
+                  }
+                  format {
+                    value
+                  }
+                  unit {
+                    value
+                  }
+                }
+              }
+            }
+          }
+        }
+        type
+        filter {
+          relacao {
+            tem_chuva_acumulada
+            tem_nivel_do_rio
+            tem_pressao_atmosferica
+            tem_sensacao_termica
+            tem_umidade
+            tem_vazao_do_rio
+            tem_vento
+            tem_barragem
+          }
+        }
+      }
+    }
+  }

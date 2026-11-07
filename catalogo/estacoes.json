@@ -1,0 +1,869 @@
+{
+  "descricao": "Catálogo de estações do Nível Rio. É a referência: o banco copia daqui.",
+  "atualizado_em": "2026-11-07",
+  "campos": {
+    "id": "identificador próprio, estável, usado nas URLs",
+    "tipo": "rio ou barragem",
+    "ordem": "posição rio abaixo dentro do mesmo rio (1 = mais a montante)",
+    "referencia": "regua (nível em metros na régua), altitude (estações \"(H)\" e barragens) ou a-confirmar",
+    "principal": "aparece na tela inicial",
+    "fonte_principal": "de onde vem o nível; a fonte_reserva só preenche buracos",
+    "codigos": "código da estação em cada fonte",
+    "conferir": "o que ainda precisa ser confirmado com a Defesa Civil ou em campo"
+  },
+  "fora_do_catalogo": "Estações só de chuva e as estações \"(H)\" do Alto Vale sem rio identificado (Aurora, Presidente Nereu, Petrolândia, Mirim Doce, Santa Terezinha, Atalanta, Rio do Campo, Salete, Penha e as \"(H)\" de Taió, Ituporanga e Alfredo Wagner). As respostas brutas guardam todas.",
+  "estacoes": [
+    {
+      "id": "barragem-oeste",
+      "nome": "Barragem Oeste",
+      "tipo": "barragem",
+      "rio": "Itajaí do Oeste",
+      "municipio": "Taió",
+      "latitude": -27.09744,
+      "longitude": -50.03879,
+      "referencia": "altitude",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00040"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "barragem-sul",
+      "nome": "Barragem Sul",
+      "tipo": "barragem",
+      "rio": "Itajaí do Sul",
+      "municipio": "Ituporanga",
+      "latitude": -27.50385,
+      "longitude": -49.5536,
+      "referencia": "altitude",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00038"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "barragem-norte",
+      "nome": "Barragem Norte",
+      "tipo": "barragem",
+      "rio": "Hercílio (Itajaí do Norte)",
+      "municipio": "José Boiteux",
+      "latitude": -26.89247,
+      "longitude": -49.68236,
+      "referencia": "altitude",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00042"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Leitura manual, por volta das 7h e das 17h."
+    },
+    {
+      "id": "taio",
+      "nome": "Taió",
+      "tipo": "rio",
+      "rio": "Itajaí do Oeste",
+      "municipio": "Taió",
+      "latitude": -27.11635,
+      "longitude": -50.00027,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00041"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "rio-do-oeste",
+      "nome": "Rio do Oeste",
+      "tipo": "rio",
+      "rio": "Itajaí do Oeste",
+      "municipio": "Rio do Oeste",
+      "latitude": -27.19863,
+      "longitude": -49.78654,
+      "ordem": 2,
+      "referencia": "altitude",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00179"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "laurentino",
+      "nome": "Laurentino",
+      "tipo": "rio",
+      "rio": "Itajaí do Oeste",
+      "municipio": "Laurentino",
+      "latitude": -27.22269,
+      "longitude": -49.73174,
+      "ordem": 3,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00031"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "alfredo-wagner",
+      "nome": "Alfredo Wagner",
+      "tipo": "rio",
+      "rio": "Itajaí do Sul",
+      "municipio": "Alfredo Wagner",
+      "latitude": -27.69037,
+      "longitude": -49.34509,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00016"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "ituporanga",
+      "nome": "Ituporanga",
+      "tipo": "rio",
+      "rio": "Itajaí do Sul",
+      "municipio": "Ituporanga",
+      "latitude": -27.48225,
+      "longitude": -49.58248,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00039"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Abaixo da Barragem Sul. Com as comportas fechadas, o nível pode ficar horas parado."
+    },
+    {
+      "id": "jose-boiteux",
+      "nome": "José Boiteux",
+      "tipo": "rio",
+      "rio": "Hercílio (Itajaí do Norte)",
+      "municipio": "José Boiteux",
+      "latitude": -26.95484,
+      "longitude": -49.63359,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00021"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Abaixo da Barragem Norte. Com as comportas fechadas, o nível pode ficar horas parado."
+    },
+    {
+      "id": "ibirama",
+      "nome": "Ibirama",
+      "tipo": "rio",
+      "rio": "Hercílio (Itajaí do Norte)",
+      "municipio": "Ibirama",
+      "latitude": -27.057,
+      "longitude": -49.51995,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00020"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "rio-do-sul",
+      "nome": "Rio do Sul",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Rio do Sul",
+      "latitude": -27.20722,
+      "longitude": -49.6335,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "fonte_reserva": "asthon",
+      "codigos": {
+        "estado": "DCSC-00013"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "cotas: Itajaí copia 5/6/7 m, Asthon usa 4,5/5,5/6,5 m e o projeto de 2023 usava 3/6/8 m"
+      ]
+    },
+    {
+      "id": "lontras",
+      "nome": "Lontras",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Lontras",
+      "latitude": -27.16572,
+      "longitude": -49.54632,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00032"
+      },
+      "situacao": "sensor com defeito",
+      "conferir": [],
+      "observacao": "Em 7 nov 2026 mandava 21474836, valor de sensor quebrado."
+    },
+    {
+      "id": "apiuna",
+      "nome": "Apiúna",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Apiúna",
+      "latitude": -27.03652,
+      "longitude": -49.39355,
+      "ordem": 3,
+      "referencia": "altitude",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00178"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Estação \"(H)\": mede altitude da água, não é comparável com régua."
+    },
+    {
+      "id": "ascurra",
+      "nome": "Ascurra",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Ascurra",
+      "latitude": -26.96129,
+      "longitude": -49.3729,
+      "ordem": 4,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00003"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "indaial",
+      "nome": "Indaial",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Indaial",
+      "latitude": -26.89172,
+      "longitude": -49.23104,
+      "ordem": 5,
+      "referencia": "a-confirmar",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00180"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "referencia: marcava 57,38 m em 7 nov 2026, parece altitude"
+      ],
+      "observacao": "Substituiu a DCSC-00006, sem leitura desde 26 set 2026."
+    },
+    {
+      "id": "blumenau",
+      "nome": "Blumenau",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Blumenau",
+      "ordem": 6,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "alertablu",
+      "codigos": {
+        "alertablu": "nivel_oficial",
+        "estado": "DCSC-00026"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "coordenadas do ponto oficial de medição"
+      ],
+      "observacao": "Nível oficial de hora em hora pelo AlertaBlu. A estação do Estado em Blumenau não mandava nível em 7 nov 2026."
+    },
+    {
+      "id": "gaspar",
+      "nome": "Gaspar",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Gaspar",
+      "latitude": -26.92641,
+      "longitude": -48.96428,
+      "ordem": 7,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00005"
+      },
+      "situacao": "sensor com defeito",
+      "conferir": [],
+      "observacao": "Em 7 nov 2026 mandava 21474836, valor de sensor quebrado."
+    },
+    {
+      "id": "ilhota",
+      "nome": "Ilhota",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Ilhota",
+      "latitude": -26.89443,
+      "longitude": -48.82478,
+      "ordem": 8,
+      "referencia": "a-confirmar",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00030"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "referencia: marcava 11,64 m em 7 nov 2026"
+      ]
+    },
+    {
+      "id": "itajai-santa-regina",
+      "nome": "Itajaí, Santa Regina (Volta de Cima)",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Itajaí",
+      "latitude": -26.87964,
+      "longitude": -48.76155,
+      "ordem": 9,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC11"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "itajai-praca-celso",
+      "nome": "Itajaí, Praça Celso Pereira da Silva",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Itajaí",
+      "latitude": -26.87568,
+      "longitude": -48.71022,
+      "ordem": 10,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC02"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Em 7 nov 2026 repetiu o mesmo valor por 3h40 enquanto as vizinhas mudavam."
+    },
+    {
+      "id": "itajai-cepsul",
+      "nome": "Itajaí, ICMBio/CEPSUL (foz)",
+      "tipo": "rio",
+      "rio": "Itajaí-Açu",
+      "municipio": "Itajaí",
+      "latitude": -26.90923,
+      "longitude": -48.6516,
+      "ordem": 11,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC01"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "Cotas mudaram desde 2023: eram 0,90/1,10/1,30 m e passaram a 1,21/1,61/1,75 m."
+    },
+    {
+      "id": "vidal-ramos",
+      "nome": "Vidal Ramos",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Vidal Ramos",
+      "latitude": -27.38548,
+      "longitude": -49.35813,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00024"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "botuvera",
+      "nome": "Botuverá",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Botuverá",
+      "latitude": -27.18619,
+      "longitude": -49.12059,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00018"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "brusque",
+      "nome": "Brusque",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Brusque",
+      "latitude": -27.10068,
+      "longitude": -48.91722,
+      "ordem": 3,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00019"
+      },
+      "situacao": "ativa",
+      "conferir": [],
+      "observacao": "As estações municipais de Brusque estão paradas desde jul 2025; vale a do Estado."
+    },
+    {
+      "id": "itajai-limoeiro",
+      "nome": "Itajaí, Limoeiro",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Itajaí",
+      "latitude": -27.03353,
+      "longitude": -48.86142,
+      "ordem": 4,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC10"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "itajai-propriedade-privada",
+      "nome": "Itajaí, curso antigo (propriedade privada)",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Itajaí",
+      "latitude": -26.93336,
+      "longitude": -48.74776,
+      "ordem": 5,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC05"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "ordem"
+      ]
+    },
+    {
+      "id": "itajai-semasa",
+      "nome": "Itajaí, canal retificado (Captação SEMASA)",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Itajaí",
+      "latitude": -26.91182,
+      "longitude": -48.71922,
+      "ordem": 6,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC03"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "ordem"
+      ]
+    },
+    {
+      "id": "itajai-itamirim",
+      "nome": "Itajaí, curso antigo (Itamirim Clube de Campo)",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Itajaí",
+      "latitude": -26.92442,
+      "longitude": -48.68576,
+      "ordem": 7,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC06"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "ordem"
+      ]
+    },
+    {
+      "id": "itajai-vitalmar",
+      "nome": "Itajaí, canal e curso antigo (Vitalmar Pescados)",
+      "tipo": "rio",
+      "rio": "Itajaí-Mirim",
+      "municipio": "Itajaí",
+      "latitude": -26.8941,
+      "longitude": -48.68838,
+      "ordem": 8,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC04"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "ordem"
+      ]
+    },
+    {
+      "id": "arraial-dos-cunhas",
+      "nome": "Arraial dos Cunhas",
+      "tipo": "rio",
+      "municipio": "Itajaí",
+      "latitude": -26.9668,
+      "longitude": -48.7992,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00163"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio",
+        "municipio"
+      ],
+      "observacao": "O Estado chama de \"Ilhota - Arraial dos Cunhas\"."
+    },
+    {
+      "id": "guabiruba",
+      "nome": "Guabiruba",
+      "tipo": "rio",
+      "rio": "Rio Guabiruba",
+      "municipio": "Guabiruba",
+      "latitude": -27.08678,
+      "longitude": -48.97739,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00029"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "timbo",
+      "nome": "Timbó",
+      "tipo": "rio",
+      "rio": "Rio Benedito",
+      "municipio": "Timbó",
+      "latitude": -26.83755,
+      "longitude": -49.27077,
+      "ordem": 3,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00023"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "benedito-novo",
+      "nome": "Benedito Novo",
+      "tipo": "rio",
+      "rio": "Rio Benedito",
+      "municipio": "Benedito Novo",
+      "latitude": -26.78194,
+      "longitude": -49.36533,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00004"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "doutor-pedrinho",
+      "nome": "Doutor Pedrinho",
+      "tipo": "rio",
+      "rio": "Rio Benedito",
+      "municipio": "Doutor Pedrinho",
+      "latitude": -26.71423,
+      "longitude": -49.48504,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00028"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "rio-dos-cedros",
+      "nome": "Rio dos Cedros",
+      "tipo": "rio",
+      "rio": "Rio dos Cedros",
+      "municipio": "Rio dos Cedros",
+      "latitude": -26.74001,
+      "longitude": -49.27269,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00011"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "pomerode",
+      "nome": "Pomerode",
+      "tipo": "rio",
+      "rio": "Rio do Testo",
+      "municipio": "Pomerode",
+      "latitude": -26.73285,
+      "longitude": -49.17579,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00007"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "luiz-alves",
+      "nome": "Luiz Alves",
+      "tipo": "rio",
+      "rio": "Rio Luiz Alves",
+      "municipio": "Luiz Alves",
+      "latitude": -26.71532,
+      "longitude": -48.90987,
+      "ordem": 1,
+      "referencia": "altitude",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00062"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "presidente-getulio",
+      "nome": "Presidente Getúlio",
+      "tipo": "rio",
+      "municipio": "Presidente Getúlio",
+      "latitude": -27.0455,
+      "longitude": -49.62428,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00043"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "trombudo-central",
+      "nome": "Trombudo Central",
+      "tipo": "rio",
+      "rio": "Rio Trombudo",
+      "municipio": "Trombudo Central",
+      "latitude": -27.31216,
+      "longitude": -49.79677,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00035"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "agrolandia",
+      "nome": "Agrolândia",
+      "tipo": "rio",
+      "municipio": "Agrolândia",
+      "latitude": -27.41253,
+      "longitude": -49.83267,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00025"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "agronomica",
+      "nome": "Agronômica",
+      "tipo": "rio",
+      "municipio": "Agronômica",
+      "latitude": -27.258,
+      "longitude": -49.71219,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00001"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "pouso-redondo",
+      "nome": "Pouso Redondo",
+      "tipo": "rio",
+      "municipio": "Pouso Redondo",
+      "latitude": -27.2575,
+      "longitude": -49.94143,
+      "referencia": "regua",
+      "principal": false,
+      "fonte_principal": "estado",
+      "codigos": {
+        "estado": "DCSC-00033"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "rio"
+      ]
+    },
+    {
+      "id": "itajai-murta-portal",
+      "nome": "Itajaí, Ribeirão da Murta (Portal)",
+      "tipo": "rio",
+      "rio": "Ribeirão da Murta",
+      "municipio": "Itajaí",
+      "latitude": -26.8927,
+      "longitude": -48.73557,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC07"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    },
+    {
+      "id": "itajai-murta-lidia",
+      "nome": "Itajaí, Ribeirão da Murta (Rua Lidia Puel Peixer)",
+      "tipo": "rio",
+      "rio": "Ribeirão da Murta",
+      "municipio": "Itajaí",
+      "latitude": -26.87978,
+      "longitude": -48.70031,
+      "ordem": 2,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC09"
+      },
+      "situacao": "ativa",
+      "conferir": [
+        "ordem"
+      ]
+    },
+    {
+      "id": "itajai-canhanduba",
+      "nome": "Itajaí, Ribeirão Canhanduba",
+      "tipo": "rio",
+      "rio": "Ribeirão Canhanduba",
+      "municipio": "Itajaí",
+      "latitude": -26.97969,
+      "longitude": -48.71195,
+      "ordem": 1,
+      "referencia": "regua",
+      "principal": true,
+      "fonte_principal": "itajai",
+      "codigos": {
+        "itajai": "DC08"
+      },
+      "situacao": "ativa",
+      "conferir": []
+    }
+  ]
+}

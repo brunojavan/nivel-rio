@@ -1,0 +1,19 @@
+{
+  "name": "nivel-rio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nível dos rios Itajaí-Açu e Itajaí-Mirim e das barragens da bacia, com histórico próprio.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler d1 migrations apply nivel-rio --remote && wrangler d1 migrations apply nivel-rio-brutos --remote && wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "types": "wrangler types"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.158.0"
+  }
+}
