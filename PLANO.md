@@ -263,7 +263,8 @@ Pronto quando, ao desligar uma fonte de propósito, o aviso chegar em menos de 1
 - Blumenau, que mede de hora em hora, nunca entra na conferência;
 - a primeira leitura depois de um buraco de mais de 30 minutos não tem com o que comparar e fica (caso de Ilhota, 1 nov, 14h30 UTC, 4,69 m);
 - cada pico apagado vai para a tabela `descartes`, aparece na página `/saude` e não volta a entrar pela série de Itajaí, pelo histórico do Estado nem pela importação do passo zero;
-- os 13 picos que já estavam no banco saíram pela migração `0005_picos_ate_7nov.sql` (9 deles de Lontras, que está desligada como sensor com defeito).
+- os 13 picos que já estavam no banco saíram pela migração `0005_picos_ate_7nov.sql` (9 deles de Lontras, que está desligada como sensor com defeito);
+- a conferência custa uma consulta a mais depois de cada gravação, que só devolve linhas quando alguma estação variou mais de 1 m no trecho. CPU medida depois de ligar (8 nov, 00h04 a 00h14 UTC, todas as execuções concluídas): Estado 10 a 12 ms, Itajaí 7 a 13 ms, tapa-buraco 5 a 11 ms, na mesma faixa de antes.
 
 **Fonte reserva (8 nov 2026): hoje nenhuma estação tem reserva que sirva.** O código do Estado que o catálogo ligava a Blumenau (DCSC-00026) é uma estação meteorológica: manda chuva, vento e temperatura, não o nível do rio. As cópias de Rio do Sul, Brusque e Blumenau no arquivo de Itajaí são, na maior parte, médias de estações vizinhas, e não servem como leitura. A única reserva de verdade seria a Asthon para Rio do Sul, que continua sem endereço conhecido. A regra (a reserva só preenche buraco da principal) fica para quando a Asthon entrar.
 
