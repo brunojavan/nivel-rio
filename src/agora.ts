@@ -1,5 +1,6 @@
 // Resumo que a tela inicial usa (/api/agora). É montado pelo coletor depois de cada coleta e guardado
 // pronto no banco, então cada visita lê uma linha só.
+import { processarAlertas, type Resumo } from './alertas';
 import { ESTACOES, intervaloEsperado, POR_ID, type Fonte } from './catalogo';
 import { isoDeUnix } from './tempo';
 
@@ -26,7 +27,7 @@ export const NOMES_FONTES: Record<Fonte, string> = {
 export async function montarAgora(db: D1Database): Promise<Record<string, unknown>> {
   const ids = JSON.stringify(RIOS.map((e) => e.id));
   const bids = JSON.stringify(BARRAGENS.map((e) => e.id));
-  const [ultimas, barragens, comportas, cotas, fontes] = await db.batch([
+  const [ultimas, barragens, comportas, cotas, fontes, avisos] = await db.batch([
     // Última leitura de cada estação e as leituras de 1 e 3 horas antes dela (para a tendência).
     db
       .prepare(
@@ -65,6 +66,10 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
        WHERE c.valida_desde = (SELECT MAX(valida_desde) FROM cotas WHERE estacao_id = c.estacao_id AND fonte = c.fonte)`,
     ),
     db.prepare(`SELECT id, nome, ultimo_sucesso, ultimo_erro, ultimo_erro_em FROM fontes WHERE ativa = 1`),
+    // Avisos públicos das últimas 24 h (fase 4), para o site.
+    db.prepare(`SELECT criado_em, tipo, estacao_id, faixa, texto FROM avisos WHERE criado_em >= ? AND publico = 1 ORDER BY id DESC LIMIT 30`).bind(
+      Math.floor(Date.now() / 1000) - 86_400,
+    ),
   ]);
 
   // Cotas: vale a da fonte principal da estação; sem ela, a de outra fonte (com a origem indicada).
@@ -90,6 +95,8 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
       nome: e.nome,
       rio: e.rio ?? null,
       municipio: e.municipio,
+      latitude: e.latitude ?? null,
+      longitude: e.longitude ?? null,
       ordem: e.ordem ?? null,
       principal: e.principal,
       referencia: e.referencia,
@@ -102,6 +109,7 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
       h1: ponto(u?.h1 ?? null),
       h3: ponto(u?.h3 ?? null),
       cotas: cotasPorEstacao.get(e.id) ?? null,
+      observacao: e.observacao ?? null,
     };
   });
 
@@ -120,6 +128,8 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
       nome: e.nome,
       rio: e.rio ?? null,
       municipio: e.municipio,
+      latitude: e.latitude ?? null,
+      longitude: e.longitude ?? null,
       intervalo_s: intervaloEsperado(e),
       observacao: e.observacao ?? null,
       medido_em: b ? isoDeUnix(b.medido_em as number) : null,
@@ -144,11 +154,29 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
       ultimo_erro: f.ultimo_erro,
       ultimo_erro_em: typeof f.ultimo_erro_em === 'number' ? isoDeUnix(f.ultimo_erro_em) : null,
     })),
+    avisos: (avisos.results as Array<{ criado_em: number; tipo: string; estacao_id: string | null; faixa: string | null; texto: string }>).map((a) => ({
+      ...a,
+      criado_em: isoDeUnix(a.criado_em),
+      texto: a.texto.split('\n')[0], // sem o link, que no site não faz falta
+    })),
   };
 }
 
-export async function atualizarAgora(db: D1Database): Promise<string> {
-  const json = JSON.stringify(await montarAgora(db));
+// Monta o resumo e grava. Com o env, avalia também os avisos (fase 4) e já põe os novos no resumo.
+export async function atualizarAgora(db: D1Database, env?: Env): Promise<string> {
+  const resumo = await montarAgora(db);
+  if (env) {
+    try {
+      const novos = await processarAlertas(env, resumo as unknown as Resumo);
+      const lista = resumo.avisos as Array<Record<string, unknown>>;
+      const agora = new Date().toISOString();
+      for (const a of novos.filter((x) => x.publico).reverse())
+        lista.unshift({ criado_em: agora, tipo: a.tipo, estacao_id: a.estacao_id, faixa: a.faixa, texto: a.texto.split('\n')[0] });
+    } catch (e) {
+      console.log(JSON.stringify({ alertas: String(e) }));
+    }
+  }
+  const json = JSON.stringify(resumo);
   await db
     .prepare(`INSERT OR REPLACE INTO instantaneo (chave, gerado_em, json) VALUES ('agora', ?, ?)`)
     .bind(Math.floor(Date.now() / 1000), json)

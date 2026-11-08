@@ -4,11 +4,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-01",
 
-  // Site estático (pasta public/). Só /api/* passa pelo código do Worker.
+  // Site estático (pasta public/). Passam pelo código do Worker: a API, a página inicial e a de cada
+  // estação (que recebem os dados já embutidos e, na estação, o título com o nível atual).
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/", "/estacao/*"]
   },
 
   // Roda a cada minuto. O código decide o que fazer em cada minuto

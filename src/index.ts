@@ -1,5 +1,6 @@
 import { atualizarAgora } from './agora';
 import { POR_ID, sincronizarCatalogo } from './catalogo';
+import { atualizarGraficos } from './graficos';
 import { coletar, tapaBuraco } from './coletor';
 import { importarPassoZero } from './importacao';
 import { passoHistorico } from './passo-zero';
@@ -24,12 +25,84 @@ async function lembrar(chave: string, segundos: number, gerar: () => Promise<str
   return texto;
 }
 
-async function agora(env: Env): Promise<Response> {
-  const texto = await lembrar('agora', 20, async () => {
-    const r = await env.DB.prepare(`SELECT json FROM instantaneo WHERE chave = 'agora'`).first<{ json: string }>();
-    return r?.json ?? (await atualizarAgora(env.DB));
+// Resumo da tela inicial com os gráficos de 24 h e a chuva juntos, num JSON só. Os três ficam prontos no
+// banco (instantaneo 'agora', 'graficos' e 'chuva'); aqui só se emendam os textos, sem interpretar.
+async function textoAgora(env: Env): Promise<string> {
+  return lembrar('agora', 20, async () => {
+    const { results } = await env.DB.prepare(`SELECT chave, json FROM instantaneo WHERE chave IN ('agora', 'graficos', 'chuva')`).all<{
+      chave: string;
+      json: string;
+    }>();
+    const agoraJson = results.find((r) => r.chave === 'agora')?.json ?? (await atualizarAgora(env.DB));
+    const graficos = results.find((r) => r.chave === 'graficos')?.json ?? 'null';
+    const chuva = results.find((r) => r.chave === 'chuva')?.json ?? 'null';
+    return `${agoraJson.slice(0, -1)},"graficos":${graficos},"chuva":${chuva}}`;
   });
-  return json(texto, 200, 30);
+}
+
+async function agora(env: Env): Promise<Response> {
+  return json(await textoAgora(env), 200, 30);
+}
+
+// Páginas com os dados já embutidos (uma ida a menos ao servidor no celular). A página de cada estação
+// ganha também o título e a descrição com o nível atual, que aparecem quando o link é compartilhado.
+type EstacaoResumo = { id: string; nome: string; municipio: string; rio: string | null; nivel?: number | null; ocupacao_pct?: number | null; medido_em: string | null };
+
+const escaparHtml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const numeroBr = (v: number, casas: number) => v.toFixed(casas).replace('.', ',');
+const horaBr = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+async function pagina(env: Env, request: Request, caminho: string, id?: string): Promise<Response> {
+  // Sem repassar os cabeçalhos do navegador: a página tem dados embutidos e não pode voltar como "não mudou" (304).
+  const asset = await env.ASSETS.fetch(new Request(new URL(caminho, request.url)));
+  if (!asset.ok) return asset;
+  let dados = '';
+  try {
+    dados = await textoAgora(env);
+  } catch (e) {
+    console.log(JSON.stringify({ rota: caminho, erro: String(e) }));
+  }
+
+  let titulo: string | null = null;
+  let descricao: string | null = null;
+  if (id && dados) {
+    const d = JSON.parse(dados) as { estacoes: EstacaoResumo[]; barragens: EstacaoResumo[] };
+    const e = d.estacoes.find((x) => x.id === id) ?? d.barragens.find((x) => x.id === id);
+    if (e) {
+      const valor =
+        e.nivel != null ? `${numeroBr(e.nivel, 2)} m` : e.ocupacao_pct != null ? `${numeroBr(e.ocupacao_pct, 1)}% de ocupação` : 'sem leitura';
+      titulo = `${e.nome}: ${valor} · Nível Rio`;
+      descricao = `${e.nome} (${e.municipio}${e.rio ? `, ${e.rio}` : ''}): ${valor}${e.medido_em ? ` em ${horaBr(e.medido_em)}` : ''}. Nível, tendência e gráficos das últimas horas e dias.`;
+    }
+  }
+
+  const rw = new HTMLRewriter();
+  if (titulo) {
+    rw.on('title', { element: (el) => void el.setInnerContent(titulo) });
+    rw.on('meta[property="og:title"]', { element: (el) => void el.setAttribute('content', titulo) });
+  }
+  if (descricao) {
+    rw.on('meta[name="description"]', { element: (el) => void el.setAttribute('content', descricao) });
+    rw.on('meta[property="og:description"]', { element: (el) => void el.setAttribute('content', descricao) });
+  }
+  if (dados)
+    rw.on('head', {
+      element: (el) =>
+        void el.append(`<script id="dados-iniciais" type="application/json">${dados.replace(/</g, '\\u003c')}</script>`, { html: true }),
+    });
+  const r = rw.transform(asset);
+  const h = new Headers(r.headers);
+  h.set('cache-control', 'public, max-age=30');
+  h.delete('etag');
+  return new Response(r.body, { status: 200, headers: h });
+}
+
+function naoEncontrada(): Response {
+  return new Response(
+    `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Estação não encontrada · Nível Rio</title><body style="font:16px system-ui;margin:40px 16px"><p>Estação não encontrada.</p><p><a href="/">Voltar para o Nível Rio</a></p>`,
+    { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } },
+  );
 }
 
 const HORAS_PERMITIDAS = new Set([24, 72, 168, 720]);
@@ -45,18 +118,34 @@ async function serie(env: Env, id: string, url: URL): Promise<Response> {
 
   const texto = await lembrar(chave, 120, async () => {
     if (est.tipo === 'barragem') {
-      const { results } = await env.DB.prepare(
-        `SELECT medido_em AS t, montante_m AS m, ocupacao_pct AS o FROM leituras_barragem
-         WHERE barragem_id = ? AND medido_em >= ? ORDER BY medido_em`,
-      )
-        .bind(id, de)
-        .all<{ t: number; m: number | null; o: number | null }>();
+      // Leituras e o histórico das comportas no período (com o estado de cada uma no começo dele).
+      const [leituras, antes, mudancas] = await env.DB.batch([
+        env.DB.prepare(
+          `SELECT medido_em AS t, montante_m AS m, ocupacao_pct AS o FROM leituras_barragem
+           WHERE barragem_id = ? AND medido_em >= ? ORDER BY medido_em`,
+        ).bind(id, de),
+        env.DB.prepare(
+          `SELECT comporta, aberta, MAX(desde) AS desde FROM comportas WHERE barragem_id = ? AND desde < ? GROUP BY comporta`,
+        ).bind(id, de),
+        env.DB.prepare(`SELECT comporta, aberta, desde FROM comportas WHERE barragem_id = ? AND desde >= ? ORDER BY desde`).bind(id, de),
+      ]);
+      const r = leituras.results as Array<{ t: number; m: number | null; o: number | null }>;
+      const comportas = new Map<string, Array<[number, number]>>();
+      for (const c of [...(antes.results as Array<{ comporta: string; aberta: number; desde: number }>), ...(mudancas.results as Array<{ comporta: string; aberta: number; desde: number }>)]) {
+        const lista = comportas.get(c.comporta) ?? [];
+        lista.push([c.desde, c.aberta]);
+        comportas.set(c.comporta, lista);
+      }
       return JSON.stringify({
         id,
         horas,
-        t: results.map((r) => r.t),
-        montante_m: results.map((r) => r.m),
-        ocupacao_pct: results.map((r) => r.o),
+        t: r.map((x) => x.t),
+        montante_m: r.map((x) => x.m),
+        ocupacao_pct: r.map((x) => x.o),
+        // Para cada comporta: [horário, 1 aberta / 0 fechada] a cada mudança. O primeiro pode ser anterior ao período.
+        comportas: [...comportas]
+          .sort(([a], [b]) => a.localeCompare(b, 'pt-BR', { numeric: true }))
+          .map(([nome, mudancas]) => ({ nome, mudancas })),
       });
     }
     const { results } = await env.DB.prepare(
@@ -75,7 +164,7 @@ async function status(env: Env): Promise<Response> {
       env.BRUTOS.prepare(`SELECT * FROM resumo ORDER BY fonte`),
       env.BRUTOS.prepare(`SELECT situacao, COUNT(*) AS janelas, SUM(itens) AS itens FROM fila_historico GROUP BY situacao`),
     ]);
-    const [coletas, contagem, importacao, fontes, ultimosErros, picos, picosTotal] = await env.DB.batch([
+    const [coletas, contagem, importacao, fontes, ultimosErros, picos, picosTotal, avisos] = await env.DB.batch([
       env.DB.prepare(
         `SELECT fonte, COUNT(*) AS execucoes, SUM(erro IS NOT NULL) AS erros, SUM(leituras_novas) AS novas, MAX(inicio) AS ultima
          FROM coletas WHERE inicio >= ? GROUP BY fonte`,
@@ -92,7 +181,9 @@ async function status(env: Env): Promise<Response> {
          ORDER BY d.descartado_em DESC, d.medido_em DESC LIMIT 10`,
       ),
       env.DB.prepare(`SELECT COUNT(*) AS n FROM descartes d JOIN estacoes e ON e.id = d.estacao_id AND e.ativa = 1`),
+      env.DB.prepare(`SELECT criado_em, tipo, texto, telegram FROM avisos ORDER BY id DESC LIMIT 10`),
     ]);
+    const segredos = env as unknown as Record<string, string | undefined>;
     const quando = (t: unknown) => (typeof t === 'number' ? isoDeUnix(t) : null);
     const imp = (importacao.results[0] as { valor?: string } | undefined)?.valor;
     return JSON.stringify({
@@ -107,6 +198,10 @@ async function status(env: Env): Promise<Response> {
         })),
         ultimos_erros: (ultimosErros.results as Array<Record<string, unknown>>).map((e) => ({ ...e, inicio: quando(e.inicio) })),
         importacao_passo_zero: imp ? JSON.parse(imp) : null,
+        avisos: {
+          telegram: { bot: !!segredos.TELEGRAM_TOKEN, canal: !!segredos.TELEGRAM_CANAL, admin: !!segredos.TELEGRAM_ADMIN },
+          ultimos: (avisos.results as Array<Record<string, unknown>>).map((a) => ({ ...a, criado_em: quando(a.criado_em), texto: String(a.texto).split('\n')[0] })),
+        },
         picos_descartados: {
           total: (picosTotal.results[0] as { n: number }).n,
           ultimos: (picos.results as Array<Record<string, unknown>>).map((p) => ({
@@ -128,6 +223,9 @@ export default {
     const url = new URL(request.url);
     if (request.method !== 'GET') return json({ erro: 'método não permitido' }, 405);
     try {
+      if (url.pathname === '/') return await pagina(env, request, '/');
+      const pag = url.pathname.match(/^\/estacao\/([a-z0-9-]+)\/?$/);
+      if (pag) return POR_ID.has(pag[1]) ? await pagina(env, request, '/estacao', pag[1]) : naoEncontrada();
       if (url.pathname === '/api/agora') return await agora(env);
       if (url.pathname === '/api/status') return await status(env);
       const m = url.pathname.match(/^\/api\/estacoes\/([a-z0-9-]+)$/);
@@ -142,7 +240,8 @@ export default {
   // Roda a cada minuto, uma tarefa por minuto: o plano grátis dá 10 ms de CPU por execução, e cada ida ao
   // banco também gasta CPU (medido em 7 nov 2026: coleta do Estado com o resumo junto, 24 a 36 ms).
   //   xx:02, xx:07, ...  resumo ao vivo do Estado (estações e barragens, com as comportas)
-  //   xx:03, xx:08, ...  monta o resumo do site (/api/agora) e confere se o catálogo mudou
+  //   xx:03, xx:08, ...  monta o resumo do site (/api/agora) e confere se o catálogo mudou;
+  //                      em xx:13 e xx:43, no lugar dele, os gráficos de 24 h da tela inicial
   //   xx:04, xx:09, ...  Itajaí (série de 12 h)
   //   xx:00, xx:05, ...  tapa-buraco com o histórico do Estado (3 estações por vez)
   //   xx:16 e xx:46      AlertaBlu (Blumenau mede de hora em hora e publica uns 10 min depois)
@@ -154,8 +253,11 @@ export default {
         await coletar(env, 'estado');
         break;
       case 3:
-        await sincronizarCatalogo(env.DB);
-        await atualizarAgora(env.DB);
+        if (minuto === 13 || minuto === 43) await atualizarGraficos(env.DB);
+        else {
+          await sincronizarCatalogo(env.DB);
+          await atualizarAgora(env.DB, env);
+        }
         break;
       case 4:
         await coletar(env, 'itajai');

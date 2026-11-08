@@ -8,7 +8,10 @@ type Comporta = { estado?: Valor; habilitada?: Valor; nome?: Valor } | null | un
 type EstacaoAoVivo = {
   codigo?: string;
   timestamp?: string;
+  name?: { general?: string };
+  position?: { bacia?: string; latitude?: number; longitude?: number };
   data?: {
+    chuva?: { acumulado?: Record<string, Valor>; homologacao?: { relacao?: { valido?: Valor } } } | null;
     rio?: { rio_nivel?: Valor; homologacao?: { relacao?: { valido?: Valor } } } | null;
     barramento?: {
       nivel?: { percentual?: Valor; montante?: Valor; jusante?: Valor; vertido?: Valor };
@@ -19,6 +22,7 @@ type EstacaoAoVivo = {
 };
 
 const v = (x: Valor) => x?.value;
+const BACIA = 'SC - Rio Itajaí';
 
 // Resumo ao vivo: uma consulta traz todas as estações de SC, com o horário em que cada uma mediu.
 export function lerEstadoAoVivo(texto: string): Resultado {
@@ -27,8 +31,27 @@ export function lerEstadoAoVivo(texto: string): Resultado {
 
   const estacoes = principaisDaFonte('estado');
   const r = resultadoVazio();
+  r.chuva = [];
+  // "Recente" é em relação à estação mais nova da própria resposta (assim o teste com amostra antiga vale).
+  let agora = 0;
+  for (const s of lista) agora = Math.max(agora, paraUnix(s.timestamp, 'Z') ?? 0);
 
   for (const s of lista) {
+    // Chuva acumulada de todos os pluviômetros da bacia, inclusive os que não medem rio (fase 5).
+    // Fica de fora o que o Estado marca como inválido e o que não manda dado há mais de 2 horas.
+    const chuva = s.data?.chuva;
+    if (s.position?.bacia === BACIA && chuva?.acumulado && s.codigo && s.position.latitude != null && s.position.longitude != null) {
+      const t = paraUnix(s.timestamp, 'Z');
+      if (t !== null && agora - t < 7200 && v(chuva.homologacao?.relacao?.valido) === true) {
+        const mm = (k: string) => numeroOuNulo(v(chuva.acumulado?.[k]), 1);
+        r.chuva.push({
+          codigo: s.codigo, nome: (s.name?.general ?? s.codigo).replace(/^SDC-SC /, ''),
+          lat: Math.round(s.position.latitude * 1e4) / 1e4, lon: Math.round(s.position.longitude * 1e4) / 1e4,
+          t, h1: mm('h001'), h24: mm('h024'), h72: mm('h072'),
+        });
+      }
+    }
+
     const est = s.codigo ? estacoes.get(s.codigo) : undefined;
     if (!est) continue;
     const t = paraUnix(s.timestamp, 'Z');

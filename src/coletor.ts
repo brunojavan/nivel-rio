@@ -54,14 +54,19 @@ export async function coletar(env: Env, fonte: FonteAoVivo): Promise<boolean> {
     await guardarBruto(env, fonte, null, new Date(inicio * 1000).toISOString(), r, erro);
     console.log(JSON.stringify({ fonte, erro }));
   }
-  await registrarColeta(env.DB, {
-    fonte,
-    inicio,
-    duracao_ms: Date.now() - inicio * 1000,
-    novas,
-    descartadas: (resultado?.descartes.length ?? 0) + picos,
-    erro,
-  });
+  // Retrato da chuva na bacia (só o Estado manda), na mesma ida ao banco do registro da coleta.
+  const extra = resultado?.chuva?.length
+    ? [env.DB.prepare(`INSERT OR REPLACE INTO instantaneo (chave, gerado_em, json) VALUES ('chuva', ?, ?)`).bind(
+        inicio,
+        JSON.stringify({ gerado_em: new Date(inicio * 1000).toISOString(), pluviometros: resultado.chuva }),
+      )]
+    : [];
+  await registrarColeta(
+    env.DB,
+    { fonte, inicio, duracao_ms: Date.now() - inicio * 1000, novas, descartadas: (resultado?.descartes.length ?? 0) + picos, erro },
+    true,
+    extra,
+  );
   return novas > 0;
 }
 

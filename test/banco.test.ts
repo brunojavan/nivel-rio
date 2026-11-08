@@ -4,6 +4,7 @@ import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { montarAgora } from '../src/agora';
+import { montarGraficos } from '../src/graficos';
 import { gravar } from '../src/banco';
 import { sincronizarCatalogo } from '../src/catalogo';
 import { lerAlertaBlu } from '../src/fontes/alertablu';
@@ -143,5 +144,20 @@ describe('resumo da tela inicial', () => {
     expect(oeste.comportas.find((c: any) => c.nome === 'C1')).toMatchObject({ aberta: true, desde_inicio_registro: false });
     expect(oeste.comportas.find((c: any) => c.nome === 'C2')).toMatchObject({ aberta: false, desde_inicio_registro: true });
     expect(a.fontes.map((f: any) => f.id).sort()).toEqual(['alertablu', 'estado', 'itajai']);
+  });
+});
+
+describe('gráficos de 24 h', () => {
+  it('um ponto por meia hora, com a última leitura de cada meia hora', async () => {
+    // A amostra do histórico de Rio do Sul tem 24 h seguidas (de 10 em 10 min), gravadas mais acima.
+    const hist = lerHistoricoEstado(amostra('estado-historico-DCSC-00013.json.gz'), 'DCSC-00013').leituras;
+    const ultima = hist.reduce((a, b) => (b.t > a.t ? b : a));
+    const g = await montarGraficos(db, ultima.t);
+    const s = g.rios['rio-do-sul'];
+    expect(s).toHaveLength(49);
+    expect(s[s.length - 1]).toBe(Math.round(ultima.nivel * 100) / 100);
+    expect(s.filter((v) => v != null).length).toBeGreaterThanOrEqual(47);
+    expect(Object.keys(g.barragens)).toEqual(['barragem-oeste', 'barragem-sul', 'barragem-norte']);
+    expect(g.de % 1800).toBe(0);
   });
 });

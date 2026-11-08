@@ -18,12 +18,16 @@ export type Cotas = { estacao: string; atencao: number | null; alerta: number | 
 
 export type Descarte = { estacao: string; t: number | null; valor: unknown; motivo: string };
 
+// Chuva acumulada num pluviômetro (fase 5). Só o retrato do momento: o Estado já manda os acumulados.
+export type Chuva = { codigo: string; nome: string; lat: number; lon: number; t: number; h1: number | null; h24: number | null; h72: number | null };
+
 export type Resultado = {
   leituras: Leitura[];
   barragens: LeituraBarragem[];
   comportas: EstadoComporta[];
   cotas: Cotas[];
   descartes: Descarte[];
+  chuva?: Chuva[];
 };
 
 export function resultadoVazio(): Resultado {

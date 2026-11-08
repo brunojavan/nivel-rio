@@ -63,6 +63,16 @@ describe('Estado, resumo ao vivo', () => {
   it('recusa uma resposta fora do formato', () => {
     expect(() => lerEstadoAoVivo('{"data":null}')).toThrow();
   });
+
+  it('traz a chuva dos pluviômetros válidos e recentes da bacia do Itajaí', () => {
+    const chuva = r.chuva!;
+    // 61 da bacia na amostra; ficam de fora 4 marcados inválidos, 1 sem validação e 1 parado desde setembro.
+    expect(chuva.length).toBe(56);
+    const blumenau = chuva.find((c) => c.codigo === 'DCSC-00026')!;
+    expect(blumenau).toMatchObject({ nome: 'Blumenau', h24: 54.8, h72: 63.1, lat: -26.9224, lon: -49.1354 });
+    expect(chuva.some((c) => c.codigo === 'DCSC-00016')).toBe(false); // Alfredo Wagner, inválido
+    expect(chuva.some((c) => c.codigo === 'DCSC-00006')).toBe(false); // Indaial, parado desde set
+  });
 });
 
 describe('Estado, histórico', () => {

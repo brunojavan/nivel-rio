@@ -24,12 +24,12 @@
 </head>
 <body>
 <header class="topo">
-  <div class="largura">
+  <div class="largura" style="display:block">
     <h1>Saúde do coletor</h1>
     <p class="suave"><a href="/">← Nível Rio</a> · atualiza a cada minuto</p>
   </div>
 </header>
-<main class="largura">
+<main class="largura" style="max-width:820px">
   <section class="cartao">
     <h2>Fontes</h2>
     <table>
@@ -42,6 +42,12 @@
   <section class="cartao">
     <h2>Erros recentes</h2>
     <div id="erros" class="suave pequeno">Carregando…</div>
+  </section>
+
+  <section class="cartao">
+    <h2>Avisos (fase 4)</h2>
+    <p id="telegram" class="suave pequeno">Carregando…</p>
+    <div id="lista-avisos" class="suave pequeno"></div>
   </section>
 
   <section class="cartao">
@@ -106,6 +112,21 @@ async function carregar() {
     const ul = el('ul');
     for (const e of c.ultimos_erros) ul.append(el('li', `${hora(e.inicio)} · ${NOMES[e.fonte] ?? e.fonte}: ${e.erro}`));
     erros.replaceChildren(ul);
+  }
+
+  const av = c.avisos;
+  if (av) {
+    const t = av.telegram;
+    document.getElementById('telegram').textContent = t.bot && t.canal
+      ? `Telegram ligado: canal público${t.admin ? ' e avisos de falha para o responsável' : ' (falta o chat do responsável para avisos de falha)'}.`
+      : 'Telegram ainda não configurado: os avisos aparecem só no site. Falta criar o bot e guardar os segredos TELEGRAM_TOKEN, TELEGRAM_CANAL e TELEGRAM_ADMIN na Cloudflare.';
+    const lista = document.getElementById('lista-avisos');
+    if (!av.ultimos.length) lista.textContent = 'Nenhum aviso registrado ainda.';
+    else {
+      const ul = el('ul');
+      for (const a of av.ultimos) ul.append(el('li', `${hora(a.criado_em)} · ${a.texto} (Telegram: ${a.telegram ?? '—'})`));
+      lista.replaceChildren(ul);
+    }
   }
 
   const pc = c.picos_descartados;

@@ -130,8 +130,10 @@ export async function registrarColeta(
   db: D1Database,
   c: { fonte: string; inicio: number; duracao_ms: number; novas: number; descartadas: number; erro: string | null },
   atualizarFonte = true,
+  extra: D1PreparedStatement[] = [],
 ): Promise<void> {
   const cmds = [
+    ...extra,
     db
       .prepare(`INSERT INTO coletas (fonte, inicio, duracao_ms, leituras_novas, descartadas, erro) VALUES (?, ?, ?, ?, ?, ?)`)
       .bind(c.fonte, c.inicio, c.duracao_ms, c.novas, c.descartadas, c.erro),

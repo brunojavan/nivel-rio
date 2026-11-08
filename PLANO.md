@@ -296,7 +296,16 @@ Pronto quando a tela inicial abrir em menos de 2 segundos num 4G e mostrar dados
 - gráfico de 24 h, 3 dias e 7 dias ao tocar na estação, com as cotas desenhadas e buraco onde não houve medição;
 - "Sobre os dados" no fim da página e o aviso da Defesa Civil (199 e SMS 40199) no topo.
 
-Falta para fechar a fase 3: gráfico de 30 dias (o histórico importado chega até lá por volta de 18 nov), página separada por estação com endereço próprio, gráfico da ocupação das barragens com o histórico das comportas, medir o tempo de abertura num 4G de verdade e o contato com as Defesas Civis antes de divulgar.
+**Site novo (8 nov 2026), a seu pedido: visual, com mapa.**
+
+- **Mapa logo no topo** (MapLibre, fundo gratuito do OpenFreeMap, sem chave): os rios da bacia destacados (traçado do OpenStreetMap, 27 KB) e um ponto por estação com o nível e a cidade. A cor do ponto é a faixa (verde, amarelo, laranja, vermelho); azul quando a fonte não publica cota; cinza quando parou de mandar. Barragens com a % de ocupação. Passar o mouse mostra nível, tendência, faixa e o gráfico de 24 h; clicar abre a página da estação. No celular, o toque abre o balão com o link. Botão "Chuva 24 h" mostra a chuva nos pluviômetros. Por cima do mapa, a contagem de estações em cada faixa e quantas sobem e descem.
+- **Abaixo do mapa, os níveis por cidade** (cartões em ordem alfabética, com gráfico de 24 h e as cotas), com a opção "por região do rio" (Alto Vale, Itajaí-Açu, Itajaí-Mirim, afluentes), que mostra também quanto cada estação subiu ou desceu em 24 h.
+- **Barragens** com anel de ocupação, comportas e gráfico de 24 h; **chuva das últimas 24 h** na bacia; **avisos** das últimas 24 h.
+- **Página de cada estação e barragem** (`/estacao/{id}`): nível grande, tendência, régua com as cotas, projeção, gráfico de 24 h / 3 / 7 / 30 dias com as faixas de cota pintadas, máxima, mínima e variação do período, as outras estações do mesmo rio de cima para baixo, as da mesma cidade, mapa, avisos e os detalhes da fonte. Na barragem, a linha do tempo de cada comporta. O título da página leva o nível atual, que aparece quando o link é compartilhado no WhatsApp.
+- A página chega com os dados embutidos (uma ida a menos ao servidor). O mapa (perto de 440 KB comprimidos) só carrega depois que a lista aparece.
+- Os gráficos de 24 h de todas as estações saem de uma consulta a cada 30 minutos (xx:13 e xx:43), que lê perto de 11 mil linhas: cerca de 550 mil por dia dos 5 milhões do plano grátis.
+
+Falta para fechar a fase 3: o histórico de 30 dias completo (a importação acaba por volta de 18 nov; até lá o gráfico de 30 dias mostra só o que já está no banco), medir o tempo de abertura num 4G de verdade e o contato com as Defesas Civis antes de divulgar.
 
 ### Fase 4: alertas
 
@@ -311,6 +320,17 @@ Por que Telegram: é grátis, e num canal público o projeto não precisa guarda
 
 Pronto quando uma simulação com os dados da cheia de 7 de novembro disparar os alertas certos, sem repetição.
 
+**Situação (8 nov 2026): avisos funcionando no site; falta só o Telegram.** O código (`src/alertas.ts`) roda junto com o resumo, de 5 em 5 minutos, e grava cada aviso na tabela `avisos`. Eles aparecem na tela inicial, na página da estação e na `/saude`. Regras adotadas:
+
+- toda mudança precisa aparecer em duas avaliações seguidas (5 minutos), para um pico de sensor não virar aviso;
+- para descer de faixa o nível precisa ficar 10 cm abaixo da cota (margem contra o vaivém em cima da cota);
+- subida rápida: 30 cm/h comparado com 1 hora antes; perto da foz (estações de Itajaí), 50 cm/h, porque a maré sozinha chegou a 47 cm/h em 7 nov; no máximo um aviso a cada 3 horas por estação;
+- comporta que abre ou fecha; fonte sem responder há mais de 1 hora, e quando volta.
+
+A simulação está em `test/alertas.test.ts`: as leituras reais de 5 a 8 nov (`amostras/2026-11-08/cheia-7nov.json.gz`) avaliadas de 5 em 5 minutos. Resultado: Blumenau atenção → alerta → emergência (8,06 m às 21h de 7 nov), Rio do Sul alerta → emergência, Brusque descendo de alerta para normal em 5 nov e subindo de novo em 7 nov, nenhum aviso repetido, no máximo 8 por estação em três dias. As estações de Itajaí perto da foz trocam entre atenção e normal com a maré: é mudança de faixa de verdade, mas pode ser muito para um canal público; decidir depois de ver no Telegram.
+
+Para ligar o Telegram (depende de você): criar o bot no @BotFather, criar o canal público com o bot como administrador e guardar os segredos `TELEGRAM_TOKEN`, `TELEGRAM_CANAL` e `TELEGRAM_ADMIN` (comandos no README). Sem eles, os avisos ficam só no site.
+
 ### Fase 5: análise
 
 - Velocidade de subida e uma projeção simples ("nesse ritmo, atinge a cota de alerta em cerca de 3 horas"), sempre marcada como estimativa.
@@ -318,6 +338,13 @@ Pronto quando uma simulação com os dados da cheia de 7 de novembro disparar os
 - Chuva acumulada na bacia, usando o CEMADEN e o Estado.
 - Maré na foz ao lado do nível de Itajaí, pela tábua do CIRAM.
 - Comparação com cheias anteriores, depois de pedir acesso ao HidroWebService da ANA.
+
+**Adiantado em 8 nov 2026:**
+
+- **Projeção:** a página da estação mostra "nesse ritmo, chega à cota de X em cerca de N horas" quando o rio sobe pelo menos 2 cm/h e a próxima cota está a menos de 24 h nesse ritmo. Conta simples pela última hora, marcada como estimativa.
+- **Chuva:** o resumo ao vivo do Estado já traz a chuva acumulada (1 h, 24 h, 72 h) de 61 pluviômetros da bacia, na mesma resposta que o coletor baixa. O coletor guarda só o retrato atual (um registro a cada 5 minutos, sem histórico, para não gastar o limite de gravações): ficam os marcados como válidos pelo Estado e com leitura das últimas 2 horas (56 na amostra de 7 nov). Aparece no mapa (botão "Chuva 24 h") e num cartão da tela inicial. O CEMADEN fica para depois: o Estado já cobre a bacia.
+
+Falta: tempo de viagem da água (Rio do Sul → Blumenau → Itajaí) medido no nosso histórico, depois que o pico desta cheia passar por Itajaí; maré do CIRAM (precisa achar como o CIRAM publica a tábua); comparação com cheias anteriores (precisa do acesso à ANA, pedido por você).
 
 ## Riscos
 

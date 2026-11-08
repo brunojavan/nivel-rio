@@ -305,6 +305,8 @@
       "tipo": "rio",
       "rio": "Itajaí-Açu",
       "municipio": "Blumenau",
+      "latitude": -26.91820,
+      "longitude": -49.06526,
       "ordem": 6,
       "referencia": "regua",
       "principal": true,
@@ -314,11 +316,8 @@
         "estado": "DCSC-00026"
       },
       "situacao": "ativa",
-      "conferir": [
-        "coordenadas do ponto oficial de medição"
-      ],
-      "observacao": "O código DCSC-00026 do Estado é uma estação meteorológica (chuva, vento, temperatura): não mede o rio e não serve de reserva para o nível. Fica para a chuva, na fase 5.",
-      "observacao": "Nível oficial de hora em hora pelo AlertaBlu. A estação do Estado em Blumenau não mandava nível em 7 nov 2026."
+      "conferir": [],
+      "observacao": "Nível oficial de hora em hora pelo AlertaBlu, medido na Ponte Governador Adolfo Konder (código PADKND no arquivo de Itajaí; coordenadas do OpenStreetMap). O código DCSC-00026 do Estado em Blumenau é uma estação meteorológica (chuva, vento, temperatura): não mede o rio e não serve de reserva para o nível."
     },
     {
       "id": "gaspar",

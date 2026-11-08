@@ -3,44 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nível Rio</title>
-  <meta name="description" content="Nível dos rios Itajaí-Açu e Itajaí-Mirim e situação das barragens da bacia, com as comportas, a cada 5 minutos.">
-  <meta name="theme-color" content="#0b5cad">
-  <meta property="og:title" content="Nível Rio">
-  <meta property="og:description" content="Nível dos rios Itajaí-Açu e Itajaí-Mirim e das barragens da bacia, com as comportas, a cada 5 minutos.">
+  <title>Nível Rio · rios da bacia do Itajaí agora</title>
+  <meta name="description" content="Mapa e nível dos rios Itajaí-Açu, Itajaí-Mirim e afluentes, cidade por cidade, e as barragens da bacia com as comportas, a cada 5 minutos.">
+  <meta name="theme-color" content="#1769c2">
+  <meta property="og:title" content="Nível Rio · rios da bacia do Itajaí agora">
+  <meta property="og:description" content="Mapa e nível dos rios Itajaí-Açu, Itajaí-Mirim e afluentes, cidade por cidade, e as barragens da bacia com as comportas, a cada 5 minutos.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <link rel="icon" href="/favicon.ico">
   <link rel="apple-touch-icon" href="/favicon@3x.png">
-  <link rel="stylesheet" href="/vendor/uPlot.min.css">
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+  <link rel="modulepreload" href="/js/comum.js">
+  <link rel="modulepreload" href="/js/graficos.js">
   <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
 <header class="topo">
   <div class="largura">
-    <h1>Nível Rio</h1>
-    <p class="suave">Rios Itajaí-Açu e Itajaí-Mirim e barragens da bacia, de cima para baixo.</p>
+    <span id="marca"></span>
+    <span id="atualizado" class="atualizado">Carregando…</span>
   </div>
 </header>
 
 <main class="largura">
-  <div class="aviso">
+  <div class="aviso-dc">
     <strong>Este site não substitui a Defesa Civil.</strong>
-    Em emergência ligue <a href="tel:199"><strong>199</strong></a>. Alertas por SMS: mande o seu CEP para <strong>40199</strong>.
+    <span>Em emergência ligue <a href="tel:199">199</a>. Alertas por SMS: mande o seu CEP para <strong>40199</strong>.</span>
   </div>
 
   <div id="situacao-geral" class="situacao-geral" hidden></div>
 
-  <div class="barra-ferramentas">
-    <span id="atualizado" class="suave">Carregando…</span>
-    <label class="alternar"><input type="checkbox" id="todas"> todas as estações</label>
+  <section class="mapa-bloco" aria-label="Mapa da bacia do Itajaí com o nível de cada estação">
+    <div id="mapa" class="mapa"></div>
+    <div class="mapa-carregando">Carregando o mapa…</div>
+    <div id="resumo-mapa" class="resumo-mapa"></div>
+    <div id="legenda"></div>
+  </section>
+
+  <div class="barra-visao">
+    <h2 id="titulo-visao">Níveis por cidade</h2>
+    <div class="abas" role="tablist" aria-label="Como agrupar as estações">
+      <button type="button" role="tab" id="aba-cidade" aria-selected="true" aria-controls="lista">Por cidade</button>
+      <button type="button" role="tab" id="aba-regiao" aria-selected="false" aria-controls="lista">Por região do rio</button>
+    </div>
+  </div>
+  <div id="lista" role="tabpanel">
+    <p class="vazio">Carregando os dados…</p>
   </div>
 
-  <div id="conteudo">
-    <p class="suave">Carregando os dados…</p>
-  </div>
+  <section aria-labelledby="titulo-barragens">
+    <div class="barra-visao">
+      <h2 id="titulo-barragens">Barragens</h2>
+      <span class="suave" style="font-size:.85rem">Seguram a água no Alto Vale; comporta azul está aberta.</span>
+    </div>
+    <div id="barragens" class="grade"></div>
+  </section>
 
-  <details class="sobre" id="sobre">
+  <section aria-labelledby="titulo-chuva" id="bloco-chuva" hidden>
+    <div class="barra-visao">
+      <h2 id="titulo-chuva">Chuva nas últimas 24 horas</h2>
+      <span class="suave" style="font-size:.85rem">Pluviômetros da Defesa Civil de SC na bacia. No mapa, toque em "Chuva 24 h".</span>
+    </div>
+    <div id="chuva" class="cartao"></div>
+  </section>
+
+  <section aria-labelledby="titulo-avisos">
+    <div class="barra-visao">
+      <h2 id="titulo-avisos">Avisos das últimas 24 horas</h2>
+      <span class="suave" style="font-size:.85rem">Mudança de faixa, subida rápida, comporta e fonte fora do ar.</span>
+    </div>
+    <div id="avisos" class="cartao"></div>
+  </section>
+
+  <details class="sobre cartao" id="sobre">
     <summary>Sobre os dados</summary>
     <p>Os dados vêm de três fontes oficiais, consultadas a cada 5 minutos:</p>
     <ul>
@@ -50,33 +85,17 @@
     </ul>
     <p>Situação de cada fonte agora:</p>
     <ul id="fontes" class="suave"></ul>
-    <p>Cada estação mostra o horário da sua última medição. Quando passa do dobro do intervalo normal sem leitura nova, aparece o aviso “sem leitura nova”. A tendência compara com a leitura de 1 hora antes.</p>
-    <p>As faixas (atenção, alerta, emergência) usam as cotas publicadas pela própria fonte. As de Rio do Sul ainda divergem entre as fontes e estão marcadas “a confirmar”.</p>
-    <p>Estações marcadas “altitude” medem a altura em relação ao nível do mar, e não na régua do rio: o número não se compara com o das outras.</p>
+    <p>Cada estação mostra o horário da sua última medição. Quando passa do dobro do intervalo normal sem leitura nova, aparece "sem leitura nova" e o ponto fica cinza no mapa. A tendência compara com a leitura de 1 hora antes. Os gráficos pequenos mostram as últimas 24 horas.</p>
+    <p>As faixas (atenção, alerta, emergência) usam as cotas publicadas pela própria fonte. Pontos azuis no mapa são estações cuja fonte não publica cotas. As cotas de Rio do Sul ainda divergem entre as fontes e estão marcadas "a confirmar".</p>
+    <p>Estações marcadas "altitude" medem a altura em relação ao nível do mar, e não na régua do rio: o número não se compara com o das outras.</p>
+    <p>Leituras de defeito do sensor (um salto de mais de 1 m que volta em até meia hora) são retiradas dos gráficos e listadas na <a href="/saude">página de saúde do coletor</a>.</p>
+    <p>Mapa: traçado dos rios do OpenStreetMap; fundo do OpenFreeMap, carregado direto pelo seu navegador.</p>
     <p>Os dados pertencem às Defesas Civis. O projeto só guarda e mostra. Código aberto em <a href="https://github.com/brunojavan/nivel-rio">github.com/brunojavan/nivel-rio</a>.</p>
   </details>
 
-  <p class="suave rodape">Primeira versão, em teste. <a href="/saude">Saúde do coletor</a></p>
+  <p class="rodape">Primeira versão, em teste. <a href="/saude">Saúde do coletor</a></p>
 </main>
 
-<template id="tpl-estacao">
-  <article class="estacao">
-    <button class="linha" type="button" aria-expanded="false">
-      <span class="nome"><span class="titulo"></span><span class="local suave"></span></span>
-      <span class="valores">
-        <span class="nivel"></span>
-        <span class="tendencia"></span>
-      </span>
-      <span class="meta">
-        <span class="faixa"></span>
-        <span class="idade"></span>
-      </span>
-    </button>
-    <div class="detalhe" hidden></div>
-  </article>
-</template>
-
-<script src="/vendor/uPlot.iife.min.js" defer></script>
-<script src="/app.js" defer></script>
+<script type="module" src="/js/inicio.js"></script>
 </body>
 </html>

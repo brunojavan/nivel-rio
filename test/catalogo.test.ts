@@ -28,6 +28,21 @@ function amostra(nome: string) {
 }
 
 describe('catálogo de estações', () => {
+  it('não tem chave repetida (no JSON, a segunda apagaria a primeira sem aviso)', () => {
+    const texto = readFileSync('catalogo/estacoes.json', 'utf8');
+    for (const bloco of texto.split(/\n    \{/)) {
+      const chaves = [...bloco.matchAll(/^      "([a-z_]+)":/gm)].map((m) => m[1]);
+      expect(chaves.length, bloco.slice(0, 60)).toBe(new Set(chaves).size);
+    }
+  });
+
+  it('toda estação tem coordenadas, para aparecer no mapa', () => {
+    for (const e of estacoes) {
+      expect(e.latitude, e.id).toBeTypeOf('number');
+      expect(e.longitude, e.id).toBeTypeOf('number');
+    }
+  });
+
   it('tem ids únicos, em minúsculas e com hífen', () => {
     const ids = estacoes.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
