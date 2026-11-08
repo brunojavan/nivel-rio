@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
-import { montarAgora } from '../src/agora';
+import { atualizarAgora, montarAgora } from '../src/agora';
 import { montarGraficos } from '../src/graficos';
 import { gravar } from '../src/banco';
 import { sincronizarCatalogo } from '../src/catalogo';
@@ -159,5 +159,16 @@ describe('gráficos de 24 h', () => {
     expect(s.filter((v) => v != null).length).toBeGreaterThanOrEqual(47);
     expect(Object.keys(g.barragens)).toEqual(['barragem-oeste', 'barragem-sul', 'barragem-norte']);
     expect(g.de % 1800).toBe(0);
+  });
+});
+
+describe('resumo com avisos', () => {
+  it('grava o resumo e o estado dos avisos na mesma ida ao banco; na primeira vez, sem avisar', async () => {
+    const json = JSON.parse(await atualizarAgora(db, proxy.env));
+    expect(json.avisos).toEqual([]);
+    const linhas = await db.prepare(`SELECT chave FROM controle WHERE chave = 'alertas' UNION ALL SELECT chave FROM instantaneo WHERE chave = 'agora'`).all();
+    expect(linhas.results).toHaveLength(2);
+    // Segunda vez: lê o estado gravado e não quebra.
+    expect(JSON.parse(await atualizarAgora(db, proxy.env)).estacoes.length).toBeGreaterThan(30);
   });
 });

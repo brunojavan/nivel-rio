@@ -1,6 +1,6 @@
 // Resumo que a tela inicial usa (/api/agora). É montado pelo coletor depois de cada coleta e guardado
 // pronto no banco, então cada visita lê uma linha só.
-import { processarAlertas, type Resumo } from './alertas';
+import { prepararAlertas, type Resumo } from './alertas';
 import { ESTACOES, intervaloEsperado, POR_ID, type Fonte } from './catalogo';
 import { isoDeUnix } from './tempo';
 
@@ -25,9 +25,14 @@ export const NOMES_FONTES: Record<Fonte, string> = {
 };
 
 export async function montarAgora(db: D1Database): Promise<Record<string, unknown>> {
+  return (await montarComEstado(db)).resumo;
+}
+
+// O resumo e, na mesma ida ao banco, o estado dos avisos (fase 4).
+async function montarComEstado(db: D1Database): Promise<{ resumo: Record<string, unknown>; estadoAlertas: string | null }> {
   const ids = JSON.stringify(RIOS.map((e) => e.id));
   const bids = JSON.stringify(BARRAGENS.map((e) => e.id));
-  const [ultimas, barragens, comportas, cotas, fontes, avisos] = await db.batch([
+  const [ultimas, barragens, comportas, cotas, fontes, avisos, estadoAlertas] = await db.batch([
     // Última leitura de cada estação e as leituras de 1 e 3 horas antes dela (para a tendência).
     db
       .prepare(
@@ -70,6 +75,7 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
     db.prepare(`SELECT criado_em, tipo, estacao_id, faixa, texto FROM avisos WHERE criado_em >= ? AND publico = 1 ORDER BY id DESC LIMIT 30`).bind(
       Math.floor(Date.now() / 1000) - 86_400,
     ),
+    db.prepare(`SELECT valor FROM controle WHERE chave = 'alertas'`),
   ]);
 
   // Cotas: vale a da fonte principal da estação; sem ela, a de outra fonte (com a origem indicada).
@@ -143,7 +149,7 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
     };
   });
 
-  return {
+  const resumo = {
     gerado_em: new Date().toISOString(),
     estacoes,
     barragens: listaBarragens,
@@ -160,26 +166,30 @@ export async function montarAgora(db: D1Database): Promise<Record<string, unknow
       texto: a.texto.split('\n')[0], // sem o link, que no site não faz falta
     })),
   };
+  return { resumo, estadoAlertas: (estadoAlertas.results[0] as { valor: string } | undefined)?.valor ?? null };
 }
 
 // Monta o resumo e grava. Com o env, avalia também os avisos (fase 4) e já põe os novos no resumo.
 export async function atualizarAgora(db: D1Database, env?: Env): Promise<string> {
-  const resumo = await montarAgora(db);
+  const { resumo, estadoAlertas } = await montarComEstado(db);
+  let cmds: D1PreparedStatement[] = [];
   if (env) {
     try {
-      const novos = await processarAlertas(env, resumo as unknown as Resumo);
+      const r = await prepararAlertas(env, resumo as unknown as Resumo, estadoAlertas);
+      cmds = r.cmds;
       const lista = resumo.avisos as Array<Record<string, unknown>>;
       const agora = new Date().toISOString();
-      for (const a of novos.filter((x) => x.publico).reverse())
+      for (const a of r.avisos.filter((x) => x.publico).reverse())
         lista.unshift({ criado_em: agora, tipo: a.tipo, estacao_id: a.estacao_id, faixa: a.faixa, texto: a.texto.split('\n')[0] });
     } catch (e) {
       console.log(JSON.stringify({ alertas: String(e) }));
     }
   }
   const json = JSON.stringify(resumo);
-  await db
-    .prepare(`INSERT OR REPLACE INTO instantaneo (chave, gerado_em, json) VALUES ('agora', ?, ?)`)
-    .bind(Math.floor(Date.now() / 1000), json)
-    .run();
+  // Avisos, estado dos avisos e resumo numa ida só ao banco.
+  await db.batch([
+    ...cmds,
+    db.prepare(`INSERT OR REPLACE INTO instantaneo (chave, gerado_em, json) VALUES ('agora', ?, ?)`).bind(Math.floor(Date.now() / 1000), json),
+  ]);
   return json;
 }

@@ -178,11 +178,12 @@ export async function enviarTelegram(env: Env, texto: string, chat: string): Pro
   }
 }
 
-// Avalia, grava os avisos e o estado, e manda para o Telegram quando houver bot.
-export async function processarAlertas(env: Env, resumo: Resumo): Promise<Aviso[]> {
+// Avalia e manda para o Telegram quando houver bot. Devolve os comandos que gravam os avisos e o estado,
+// para irem ao banco junto com o resumo (cada ida ao banco gasta CPU). O estado anterior vem lido junto
+// com o resumo (src/agora.ts).
+export async function prepararAlertas(env: Env, resumo: Resumo, estadoTexto: string | null): Promise<{ avisos: Aviso[]; cmds: D1PreparedStatement[] }> {
   const agora = Math.floor(Date.now() / 1000);
-  const linha = await env.DB.prepare(`SELECT valor FROM controle WHERE chave = 'alertas'`).first<{ valor: string }>();
-  const { estado, avisos } = avaliar(linha ? (JSON.parse(linha.valor) as EstadoAlertas) : null, resumo, agora);
+  const { estado, avisos } = avaliar(estadoTexto ? (JSON.parse(estadoTexto) as EstadoAlertas) : null, resumo, agora);
 
   const segredos = env as unknown as Record<string, string | undefined>;
   const resultados: string[] = [];
@@ -203,7 +204,6 @@ export async function processarAlertas(env: Env, resumo: Resumo): Promise<Aviso[
          FROM json_each(?2)`,
       ).bind(agora, JSON.stringify(avisos.map((a, i) => [a.tipo, a.estacao_id, a.faixa, a.texto, a.publico ? 1 : 0, resultados[i]]))),
     );
-  await env.DB.batch(cmds);
   if (avisos.length) console.log(JSON.stringify({ avisos: avisos.map((a) => a.texto.split('\n')[0]) }));
-  return avisos;
+  return { avisos, cmds };
 }
