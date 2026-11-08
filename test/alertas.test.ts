@@ -108,7 +108,7 @@ describe('avisos: simulação com a cheia de 7 nov 2026', () => {
     series: Record<string, Array<[number, number]>>;
   };
   const principal = (id: string) => (id === 'blumenau' ? 'alertablu' : 'itajai');
-  const intervalo = (id: string) => (id === 'blumenau' ? 3600 : id.startsWith('itajai') ? 600 : 300);
+  const intervalo = (id: string) => (id === 'blumenau' ? 3600 : id.startsWith('itajai') ? 900 : 300);
 
   function resumoEm(t: number): Resumo {
     const estacoes: EstacaoResumo[] = [];

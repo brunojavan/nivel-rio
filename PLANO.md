@@ -83,7 +83,7 @@ Medido em 7 de novembro de 2026, entre 16h40 e 17h30. As fontes foram consultada
 |---|---|---|---|
 | Estado: estações de rio e barragens Sul e Oeste | 1 min ao vivo; o histórico guarda uma a cada 10 min | menos de 1 min | o ao vivo mostra só a última; o histórico guarda 90 dias |
 | Estado: Barragem Norte | duas vezes por dia, às 7h e às 17h (leitura manual) | na hora | sim |
-| Itajaí: 11 estações da cidade | 10 min | 2,5 a 6 min | 12 h |
+| Itajaí: 11 estações da cidade | 10 min | 2,5 a 6 min em 7 nov; 10 a 14 min em 8 nov, de madrugada (o site só avisa "sem leitura nova" depois de 32 min) | 12 h |
 | AlertaBlu: Ponte Adolfo Konder (leitura bruta) | 5 min | 3 a 6 min | não, só a última |
 | AlertaBlu: nível oficial de Blumenau | 1 h | cerca de 10 min | 24 h |
 | Asthon: Rio do Sul | 10 min | 1 a 4 min | sim |

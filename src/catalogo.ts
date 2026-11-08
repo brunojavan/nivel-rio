@@ -40,7 +40,9 @@ export function principaisDaFonte(fonte: Fonte): Map<string, Estacao> {
 export function intervaloEsperado(e: Estacao): number {
   if (e.id === 'barragem-norte') return 12 * 3600; // leitura manual, às 7h e às 17h
   if (e.fonte_principal === 'alertablu') return 3600;
-  if (e.fonte_principal === 'itajai') return 600;
+  // Itajaí mede de 10 em 10 min, mas publica cada leitura 10 a 14 min depois (visto em 8 nov 2026); com a
+  // coleta de 5 em 5 min, uma leitura normal chega a ter perto de 29 min. Com 15 min, o aviso sai aos 32.
+  if (e.fonte_principal === 'itajai') return 900;
   return 300; // Estado: o sensor manda a cada minuto e o coletor lê a cada 5
 }
 
