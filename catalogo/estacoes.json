@@ -317,6 +317,7 @@
       "conferir": [
         "coordenadas do ponto oficial de medição"
       ],
+      "observacao": "O código DCSC-00026 do Estado é uma estação meteorológica (chuva, vento, temperatura): não mede o rio e não serve de reserva para o nível. Fica para a chuva, na fase 5.",
       "observacao": "Nível oficial de hora em hora pelo AlertaBlu. A estação do Estado em Blumenau não mandava nível em 7 nov 2026."
     },
     {

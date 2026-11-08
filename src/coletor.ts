@@ -43,9 +43,11 @@ export async function coletar(env: Env, fonte: FonteAoVivo): Promise<boolean> {
   const { resultado, erro } = interpretar(r, cfg.ler);
 
   let novas = 0;
+  let picos = 0;
   if (resultado && !erro) {
     const g = await gravar(env.DB, resultado, fonte, 'medicao', inicio);
     novas = g.leituras + g.barragens + g.comportas + g.cotas;
+    picos = g.picos;
     logarDescartes(fonte, resultado.descartes);
   } else {
     // Guarda a resposta como veio, para investigar.
@@ -57,7 +59,7 @@ export async function coletar(env: Env, fonte: FonteAoVivo): Promise<boolean> {
     inicio,
     duracao_ms: Date.now() - inicio * 1000,
     novas,
-    descartadas: resultado?.descartes.length ?? 0,
+    descartadas: (resultado?.descartes.length ?? 0) + picos,
     erro,
   });
   return novas > 0;
@@ -116,7 +118,7 @@ export async function tapaBuraco(env: Env): Promise<void> {
       agora,
       Math.max(...respostas.map((r) => r.ms)),
       g.leituras + g.barragens,
-      junto.descartes.length,
+      junto.descartes.length + g.picos,
       erros.length ? erros.join('; ').slice(0, 500) : null,
     ),
     gravarControle(env.DB, 'tapa_buraco', conferido),

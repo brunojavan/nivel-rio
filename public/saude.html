@@ -45,6 +45,12 @@
   </section>
 
   <section class="cartao">
+    <h2>Picos descartados</h2>
+    <div id="picos" class="suave pequeno">Carregando…</div>
+    <p class="suave pequeno" style="margin-top:8px">Leitura que se afasta mais de 1 m da anterior e volta ao nível de antes em até 30 minutos. Nenhum rio da bacia faz isso: é defeito do sensor. A leitura sai do gráfico e fica guardada à parte. Só estações ativas.</p>
+  </section>
+
+  <section class="cartao">
     <h2>Histórico de 90 dias do Estado (passo zero)</h2>
     <div class="barra"><div id="barra"></div></div>
     <p id="download" class="suave pequeno">Carregando…</p>
@@ -100,6 +106,18 @@ async function carregar() {
     const ul = el('ul');
     for (const e of c.ultimos_erros) ul.append(el('li', `${hora(e.inicio)} · ${NOMES[e.fonte] ?? e.fonte}: ${e.erro}`));
     erros.replaceChildren(ul);
+  }
+
+  const pc = c.picos_descartados;
+  const picos = document.getElementById('picos');
+  if (!pc || !pc.total) picos.textContent = 'Nenhum até agora.';
+  else {
+    const ul = el('ul');
+    for (const p of pc.ultimos) {
+      const nivel = p.nivel_m.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      ul.append(el('li', `${p.nome ?? p.estacao_id}: ${nivel} m medido em ${hora(p.medido_em)}`));
+    }
+    picos.replaceChildren(el('p', `${pc.total.toLocaleString('pt-BR')} no total. Os mais recentes:`), ul);
   }
 
   const sit = Object.fromEntries((d.passo_zero.historico.situacoes ?? []).map((s) => [s.situacao, s]));

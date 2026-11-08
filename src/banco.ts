@@ -4,17 +4,19 @@
 // - cada leitura é gravada uma vez, pelo horário da medição; a mesma leitura vista em várias coletas não duplica;
 // - "medicao" grava tudo o que é novo; "tapa-buraco" (histórico do Estado) só grava um ponto quando não há
 //   nenhuma leitura da estação a menos de 5 minutos dele, para não misturar a série ao vivo com a de 10 min;
-// - comportas e cotas só ganham linha nova quando mudam.
+// - comportas e cotas só ganham linha nova quando mudam;
+// - leituras novas passam pela conferência de picos (src/picos.ts); uma leitura já descartada não volta a entrar.
 //
 // Cada comando manda todas as linhas de uma vez, como um texto JSON lido com json_each,
 // para gastar uma consulta só por tabela.
 import type { Resultado } from './fontes/tipos';
+import { limparPicos } from './picos';
 
 export type Modo = 'medicao' | 'tapa-buraco';
 
 export const TOLERANCIA_TAPA_BURACO_S = 300;
 
-export type Gravacao = { leituras: number; barragens: number; comportas: number; cotas: number; linhas_gravadas: number };
+export type Gravacao = { leituras: number; barragens: number; comportas: number; cotas: number; linhas_gravadas: number; picos: number };
 
 export async function gravar(db: D1Database, r: Resultado, fonte: string, modo: Modo, agora: number): Promise<Gravacao> {
   const cmds: Array<[keyof Omit<Gravacao, 'linhas_gravadas'>, D1PreparedStatement]> = [];
@@ -32,7 +34,10 @@ export async function gravar(db: D1Database, r: Resultado, fonte: string, modo: 
            ) p
            WHERE NOT EXISTS (
              SELECT 1 FROM leituras l WHERE l.estacao_id = p.e AND l.medido_em BETWEEN p.t - ?3 AND p.t + ?3
-           )`,
+           ) AND NOT EXISTS (
+             SELECT 1 FROM descartes d WHERE d.estacao_id = p.e AND d.medido_em BETWEEN p.t - ?3 AND p.t + ?3
+           )
+           RETURNING estacao_id, medido_em`,
         )
         .bind(JSON.stringify(r.leituras.map((l) => [l.estacao, l.t, l.nivel])), fonte, tapa ? TOLERANCIA_TAPA_BURACO_S : 0),
     ]);
@@ -106,13 +111,17 @@ export async function gravar(db: D1Database, r: Resultado, fonte: string, modo: 
     ]);
   }
 
-  const g: Gravacao = { leituras: 0, barragens: 0, comportas: 0, cotas: 0, linhas_gravadas: 0 };
+  const g: Gravacao = { leituras: 0, barragens: 0, comportas: 0, cotas: 0, linhas_gravadas: 0, picos: 0 };
   if (!cmds.length) return g;
   const res = await db.batch(cmds.map(([, c]) => c));
+  let novas: Array<{ e: string; t: number }> = [];
   res.forEach((x, i) => {
-    g[cmds[i][0]] = x.meta.changes ?? 0;
+    const tabela = cmds[i][0];
+    g[tabela] = x.meta.changes ?? 0;
     g.linhas_gravadas += x.meta.rows_written ?? 0;
+    if (tabela === 'leituras') novas = (x.results as Array<{ estacao_id: string; medido_em: number }>).map((r) => ({ e: r.estacao_id, t: r.medido_em }));
   });
+  g.picos = await limparPicos(db, novas);
   return g;
 }
 

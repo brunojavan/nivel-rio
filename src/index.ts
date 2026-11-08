@@ -75,7 +75,7 @@ async function status(env: Env): Promise<Response> {
       env.BRUTOS.prepare(`SELECT * FROM resumo ORDER BY fonte`),
       env.BRUTOS.prepare(`SELECT situacao, COUNT(*) AS janelas, SUM(itens) AS itens FROM fila_historico GROUP BY situacao`),
     ]);
-    const [coletas, contagem, importacao, fontes, ultimosErros] = await env.DB.batch([
+    const [coletas, contagem, importacao, fontes, ultimosErros, picos, picosTotal] = await env.DB.batch([
       env.DB.prepare(
         `SELECT fonte, COUNT(*) AS execucoes, SUM(erro IS NOT NULL) AS erros, SUM(leituras_novas) AS novas, MAX(inicio) AS ultima
          FROM coletas WHERE inicio >= ? GROUP BY fonte`,
@@ -86,6 +86,12 @@ async function status(env: Env): Promise<Response> {
       env.DB.prepare(`SELECT fonte, inicio, erro FROM coletas WHERE inicio >= ? AND erro IS NOT NULL ORDER BY inicio DESC LIMIT 10`).bind(
         Math.floor(Date.now() / 1000) - 86_400,
       ),
+      env.DB.prepare(
+        `SELECT d.estacao_id, e.nome, d.medido_em, d.nivel_m, d.descartado_em
+         FROM descartes d JOIN estacoes e ON e.id = d.estacao_id AND e.ativa = 1
+         ORDER BY d.descartado_em DESC, d.medido_em DESC LIMIT 10`,
+      ),
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM descartes d JOIN estacoes e ON e.id = d.estacao_id AND e.ativa = 1`),
     ]);
     const quando = (t: unknown) => (typeof t === 'number' ? isoDeUnix(t) : null);
     const imp = (importacao.results[0] as { valor?: string } | undefined)?.valor;
@@ -101,6 +107,14 @@ async function status(env: Env): Promise<Response> {
         })),
         ultimos_erros: (ultimosErros.results as Array<Record<string, unknown>>).map((e) => ({ ...e, inicio: quando(e.inicio) })),
         importacao_passo_zero: imp ? JSON.parse(imp) : null,
+        picos_descartados: {
+          total: (picosTotal.results[0] as { n: number }).n,
+          ultimos: (picos.results as Array<Record<string, unknown>>).map((p) => ({
+            ...p,
+            medido_em: quando(p.medido_em),
+            descartado_em: quando(p.descartado_em),
+          })),
+        },
       },
       passo_zero: { fontes: resumo.results, historico: { situacoes: fila.results }, banco_bytes: resumo.meta.size_after },
       banco_principal: { bytes: contagem.meta.size_after },

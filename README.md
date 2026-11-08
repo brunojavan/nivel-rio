@@ -26,6 +26,7 @@ Cada push na branch `main` publica a versão nova automaticamente (Workers Build
 | `src/fontes/` | Um parser por fonte (Estado, Itajaí, AlertaBlu) |
 | `src/coletor.ts` | Coleta ao vivo e tapa-buraco com o histórico do Estado |
 | `src/banco.ts` | Gravação: sem duplicar leitura, comporta e cota só quando mudam |
+| `src/picos.ts` | Apaga picos de sensor (salto de mais de 1 m que volta em até 30 min) e guarda cada um na tabela `descartes` |
 | `src/agora.ts` | Resumo da tela inicial, montado depois de cada coleta |
 | `src/importacao.ts` | Importa o que o passo zero guardou (roda sozinho até acabar) |
 | `src/passo-zero.ts` | Download único do histórico do Estado (últimos 90 dias) |
@@ -43,7 +44,7 @@ Cada push na branch `main` publica a versão nova automaticamente (Workers Build
 |---|---|
 | `/api/agora` | Tudo o que a tela inicial mostra: última leitura de cada estação, leituras de 1 h e 3 h antes, cotas, barragens e comportas, situação das fontes |
 | `/api/estacoes/{id}?horas=24` | Série de uma estação (24, 72, 168 ou 720 horas). Barragens devolvem ocupação e nível |
-| `/api/status` | Situação do coletor e da importação |
+| `/api/status` | Situação do coletor e da importação, e os picos descartados |
 
 ## Comandos
 

@@ -173,7 +173,7 @@ Tudo roda na nuvem, sem servidor para manter e sem depender do seu computador li
 Regras de gravação:
 
 - Horário sempre em UTC. O fuso de Brasília só entra na hora de mostrar.
-- Valores impossíveis (21474836, negativos, saltos de vários metros em 10 minutos) são descartados e anotados no log.
+- Valores impossíveis (21474836, negativos, picos de mais de 1 m que voltam em até 30 minutos) são descartados e anotados no log; os picos ficam guardados na tabela `descartes`.
 - Quando a mesma estação vem de duas fontes, vale a principal. A reserva só preenche os buracos.
 
 ## Fases
@@ -241,7 +241,7 @@ Decisões tomadas na implementação:
 - **O AlertaBlu entrou já na fase 1**, para Blumenau não ficar sem dado no site. O certificado incompleto não atrapalha quando a consulta parte da Cloudflare. As cotas de Blumenau vêm da própria resposta (atenção 4 m, alerta 6 m, alerta máximo 8 m).
 - **A resposta bruta só é guardada quando algo dá errado** (a fonte falha ou o parser não entende). Com isso o banco de brutos parou de crescer 12 MB por dia; o risco de enchê-lo em dezembro acabou.
 - **Ponto do histórico só entra onde não há leitura a menos de 5 minutos.** A série ao vivo (de 5 em 5 minutos) e a do histórico (de 10 em 10) não se misturam; o histórico só preenche buraco.
-- **Descartes:** o valor 21474836, níveis negativos (menos em Itajaí, onde a maré pode levar o nível abaixo de zero) e leituras que o próprio Estado marca como inválidas. Cada coleta conta os descartes no log. Saltos de vários metros em 10 minutos ainda não são detectados (fase 2).
+- **Descartes:** o valor 21474836, níveis negativos (menos em Itajaí, onde a maré pode levar o nível abaixo de zero) e leituras que o próprio Estado marca como inválidas. Cada coleta conta os descartes no log. Os picos de sensor entraram na fase 2 (veja lá).
 - **Cotas:** o Estado não publica cotas no resumo ao vivo. Para Rio do Sul e Brusque o site usa as cotas que a Defesa Civil de Itajaí publica para essas estações, com a origem indicada. As de Rio do Sul aparecem marcadas "a confirmar".
 - **Importação com limite diário:** no máximo 50 mil linhas gravadas por dia, para a coleta normal (perto de 12 mil por dia) nunca ficar sem espaço no limite de 100 mil. O histórico de 9 ago a 31 out deve terminar de entrar por volta de 18 nov.
 - **O catálogo é copiado para o banco sozinho**: quando `catalogo/estacoes.json` muda, a execução seguinte atualiza a tabela `estacoes`.
@@ -255,7 +255,19 @@ Decisões tomadas na implementação:
 
 Pronto quando, ao desligar uma fonte de propósito, o aviso chegar em menos de 1 hora.
 
-**Adiantado em 7 nov 2026:** a tabela de cotas com vigência já funciona (cada mudança de cota ganha uma linha nova com a data). O site já avisa "sem leitura nova" quando passa do dobro do intervalo normal e mostra "possível sensor travado" quando a estação repete o mesmo valor agora, 1 h e 3 h antes, enquanto outra do mesmo rio mudou 5 cm ou mais. A situação de cada fonte aparece em "Sobre os dados", e a página `/saude` mostra cada fonte nas últimas 24 horas, os erros recentes, o andamento do histórico do passo zero e o espaço usado. Falta: Asthon, a regra de fonte reserva, a detecção de saltos impossíveis no coletor e o aviso no Telegram (este depende de você criar um bot no Telegram e me passar o token como segredo da Cloudflare).
+**Adiantado em 7 nov 2026:** a tabela de cotas com vigência já funciona (cada mudança de cota ganha uma linha nova com a data). O site já avisa "sem leitura nova" quando passa do dobro do intervalo normal e mostra "possível sensor travado" quando a estação repete o mesmo valor agora, 1 h e 3 h antes, enquanto outra do mesmo rio mudou 5 cm ou mais. A situação de cada fonte aparece em "Sobre os dados", e a página `/saude` mostra cada fonte nas últimas 24 horas, os erros recentes, o andamento do histórico do passo zero e o espaço usado.
+
+**Picos de sensor (8 nov 2026).** Nos 7 dias já gravados apareceram leituras isoladas muito fora da série: Rio do Sul caiu 1,19 m numa leitura e voltou na seguinte (5 nov), Ascurra caiu 2,26 m (4 nov), Ilhota teve quedas de até 6 m durante meia hora (1 nov). A regra adotada: uma leitura que se afasta mais de 1 m da anterior é apagada só se o nível voltar para perto do de antes em até 30 minutos. Nenhum rio da bacia faz esse vaivém de 1 m em meia hora; uma cheia de verdade sobe e não volta, e por isso nunca é apagada. Com 1 m, a oscilação normal de Benedito Novo (até 84 cm em 10 minutos, e volta) fica. Consequências:
+
+- a leitura mais recente, que ainda não tem a seguinte, aparece no site até a próxima coleta decidir (no máximo 5 minutos no ar);
+- Blumenau, que mede de hora em hora, nunca entra na conferência;
+- a primeira leitura depois de um buraco de mais de 30 minutos não tem com o que comparar e fica (caso de Ilhota, 1 nov, 14h30 UTC, 4,69 m);
+- cada pico apagado vai para a tabela `descartes`, aparece na página `/saude` e não volta a entrar pela série de Itajaí, pelo histórico do Estado nem pela importação do passo zero;
+- os 13 picos que já estavam no banco saíram pela migração `0005_picos_ate_7nov.sql` (9 deles de Lontras, que está desligada como sensor com defeito).
+
+**Fonte reserva (8 nov 2026): hoje nenhuma estação tem reserva que sirva.** O código do Estado que o catálogo ligava a Blumenau (DCSC-00026) é uma estação meteorológica: manda chuva, vento e temperatura, não o nível do rio. As cópias de Rio do Sul, Brusque e Blumenau no arquivo de Itajaí são, na maior parte, médias de estações vizinhas, e não servem como leitura. A única reserva de verdade seria a Asthon para Rio do Sul, que continua sem endereço conhecido. A regra (a reserva só preenche buraco da principal) fica para quando a Asthon entrar.
+
+Falta: Asthon (e com ela a fonte reserva) e o aviso no Telegram (este depende de você criar um bot no Telegram e me passar o token como segredo da Cloudflare).
 
 ### Fase 3: site público
 
