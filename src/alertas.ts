@@ -24,7 +24,7 @@ export const SUBIDA_CMH = 30;
 export const SUBIDA_CMH_FOZ = 50;
 export const REPETIR_SUBIDA_S = 3 * 3600;
 export const FONTE_FORA_S = 3600;
-const SITE = 'https://nivel-rio.nivel-rio.workers.dev';
+const SITE = 'https://niveldorio.net';
 
 type Cotas = { atencao: number | null; alerta: number | null; emergencia: number | null } | null;
 type Ponto = { medido_em: string; nivel: number } | null;

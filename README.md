@@ -2,7 +2,7 @@
 
 Nível dos rios Itajaí-Açu e Itajaí-Mirim e situação das três barragens da bacia (incluindo quais comportas estão abertas), com histórico próprio, site público e alertas.
 
-**Endereço:** https://nivel-rio.nivel-rio.workers.dev (primeira versão, em teste)
+**Endereço:** https://niveldorio.net (o endereço antigo, https://nivel-rio.nivel-rio.workers.dev, continua funcionando)
 
 > Este site não substitui a Defesa Civil. Em caso de cheia, ligue **199** e cadastre-se para receber alertas por SMS no **40199** (mande o seu CEP).
 

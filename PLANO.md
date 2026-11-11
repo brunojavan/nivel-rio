@@ -121,7 +121,7 @@ Do Estado, o coletor lê o resumo ao vivo (uma consulta só, com todas as estaç
  Banco D1 (SQLite na Cloudflare): estações, cotas, leituras, barragens, comportas, log de coletas
                   │
                   ▼
- API (Worker) ──► Site público (arquivos estáticos no mesmo Worker, endereço workers.dev)
+ API (Worker) ──► Site público (arquivos estáticos no mesmo Worker, em niveldorio.net)
                   │
                   └─► Alertas: canal público no Telegram + avisos de falha para você
 
@@ -146,7 +146,7 @@ Tudo roda na nuvem, sem servidor para manter e sem depender do seu computador li
 - **CPU de 10 ms por execução.** A resposta do Estado tem cerca de 490 KB. Ler esse JSON cabe nesse tempo, mas por segurança cada fonte roda numa execução separada.
 - **100 mil requisições por dia.** Numa cheia com muita gente acompanhando, a API pode passar disso. Para economizar, o site busca um único JSON a cada 5 minutos e só enquanto a aba estiver aberta. Se mesmo assim estourar, o plano pago da Cloudflare custa US$ 5 por mês e sobe o limite para 10 milhões por mês.
 
-**Endereço:** https://nivel-rio.nivel-rio.workers.dev, de graça. O Wrangler registrou o subdomínio da conta como `nivel-rio`, por isso o nome repetido; dá para trocar no painel da Cloudflare (Workers & Pages → Subdomain). Um domínio próprio (.com.br) custa cerca de R$ 40 por ano e é opcional.
+**Endereço:** https://niveldorio.net, desde 11 nov 2026. O domínio foi registrado na Locaweb (vence em 11 nov 2027, renovar por lá) e usa os nameservers da Cloudflare (`oswald` e `rihana`), na mesma conta do Worker. Na Cloudflare, niveldorio.net e www.niveldorio.net estão ligados ao Worker como domínios próprios (Workers & Pages → nivel-rio → Domains), e uma regra de redirecionamento (Rules → Redirect Rules) manda o www para o endereço sem www. O endereço antigo, https://nivel-rio.nivel-rio.workers.dev, continua no ar.
 
 **Por que não o R2 para as respostas brutas:** o R2 tem 10 GB grátis, mas a Cloudflare exige um cartão cadastrado para ativá-lo. As respostas brutas ficam num segundo banco D1 (`nivel-rio-brutos`), comprimidas em gzip.
 
