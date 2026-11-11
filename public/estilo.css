@@ -30,17 +30,16 @@
   color-scheme: light;
 }
 
-/* À noite a mesma parede, mais escura. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --reboco: #23292D; --reboco-claro: #2B3237; --reboco-fundo: #283035; --reboco-escuro: #3A4349;
-    --tinta: #E4E8EA; --tinta-2: #B3BCC1; --fio: rgba(228, 232, 234, .25);
-    --placa: #2D5BC0; --placa-escura: #23489A;
-    --agua: #2D5BC0;
-    --normal: #4DB37A; --atencao: #E2B13C; --alerta: #F38A4E; --emergencia: #F0675C; --parada: #8B9499;
-    --normal-txt: #6FCB96; --atencao-txt: #EBC15C; --alerta-txt: #F79D69; --emergencia-txt: #F58A81;
-    color-scheme: dark;
-  }
+/* À noite a mesma parede, mais escura. O claro é o padrão; o escuro só entra pelo botão do topo
+   (js/tema.js), e a escolha fica guardada no aparelho. */
+:root[data-tema="escuro"] {
+  --reboco: #23292D; --reboco-claro: #2B3237; --reboco-fundo: #283035; --reboco-escuro: #3A4349;
+  --tinta: #E4E8EA; --tinta-2: #B3BCC1; --fio: rgba(228, 232, 234, .25);
+  --placa: #2D5BC0; --placa-escura: #23489A;
+  --agua: #2D5BC0;
+  --normal: #4DB37A; --atencao: #E2B13C; --alerta: #F38A4E; --emergencia: #F0675C; --parada: #8B9499;
+  --normal-txt: #6FCB96; --atencao-txt: #EBC15C; --alerta-txt: #F79D69; --emergencia-txt: #F58A81;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -55,7 +54,7 @@ body {
 :focus-visible { outline: 3px solid var(--placa); outline-offset: 2px; }
 html { scrollbar-color: var(--tinta-2) var(--reboco); }
 a { color: var(--placa); font-weight: 650; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
-@media (prefers-color-scheme: dark) { a { color: #9DB8F2; } }
+:root[data-tema="escuro"] a { color: #9DB8F2; }
 h1, h2, h3 { line-height: 1.15; letter-spacing: -.01em; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
 .num { font-variant-numeric: tabular-nums; }
@@ -82,13 +81,24 @@ p { margin: 0; text-wrap: pretty; }
 .botao:hover { background: var(--reboco-claro); }
 .botao[aria-pressed="true"], .botao.ativo { background: var(--tinta); color: var(--reboco); }
 .link { font: inherit; text-align: left; background: none; border: 0; padding: 0; color: var(--placa); font-weight: 650; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: pointer; min-height: 44px; }
-@media (prefers-color-scheme: dark) { .link { color: #9DB8F2; } }
+:root[data-tema="escuro"] .link { color: #9DB8F2; }
 
 /* Topo */
 .topo .largura { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--tinta); flex-wrap: wrap; }
 .marca { display: inline-flex; align-items: center; gap: 9px; color: var(--tinta); text-decoration: none; font-weight: 800; font-size: 1.375rem; letter-spacing: -.015em; }
 .marca svg { width: 30px; height: 30px; }
 .atualizado { font-size: .9375rem; }
+.topo-dir { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+/* Botão do tema: lua no claro (passa para o escuro), sol no escuro (volta para o claro). */
+.tema {
+  display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; flex: none;
+  color: var(--tinta); background: transparent; border: 2px solid var(--tinta); border-radius: var(--raio); cursor: pointer;
+}
+.tema:hover { background: var(--reboco-claro); }
+.tema svg { width: 20px; height: 20px; }
+.tema .sol, :root[data-tema="escuro"] .tema .lua { display: none; }
+:root[data-tema="escuro"] .tema .sol { display: block; }
+@media (max-width: 400px) { .marca { font-size: 1.25rem; gap: 7px; } .marca svg { width: 26px; height: 26px; } .topo-dir { gap: 8px; } .atualizado { font-size: .875rem; } }
 .atualizado.velho { color: var(--emergencia-txt); font-weight: 700; }
 
 .dc { font-size: .9375rem; padding: 8px 0 9px; border-bottom: 1px solid var(--fio); display: flex; flex-wrap: wrap; gap: 2px 14px; align-items: baseline; }

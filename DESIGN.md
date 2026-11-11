@@ -162,7 +162,7 @@ Este sistema substitui o site anterior, que a crítica de 11 nov 2026 avaliou co
 
 ## Colors
 
-Uma paleta de material: reboco e tinta são o mundo; o azul esmaltado é o objeto; as quatro cores de faixa são o estado do rio e nada mais. Os valores dos dois temas estão no frontmatter; o tema escuro (sufixo `-noite`) entra por `prefers-color-scheme: dark` e é "a mesma parede à noite".
+Uma paleta de material: reboco e tinta são o mundo; o azul esmaltado é o objeto; as quatro cores de faixa são o estado do rio e nada mais. Os valores dos dois temas estão no frontmatter; o tema claro é o padrão, mesmo com o sistema no escuro; o tema escuro (sufixo `-noite`, "a mesma parede à noite") entra só pelo botão do topo, com `data-tema="escuro"` na raiz, e a escolha fica guardada no aparelho (`localStorage`, chave `tema`).
 
 ### Primary
 - **Azul da placa** (placa): fundo da placa esmaltada com o número principal, cor dos links e do contorno de foco (3px), seleção de texto, rios no mapa e pontos das barragens.
@@ -282,7 +282,9 @@ Campo nativo com fundo reboco claro, contorno de tinta de 2px, raio de 4px, 44px
 Logo abaixo do topo, em todas as páginas: "Este site não substitui a Defesa Civil.", "Emergência: 199" (1,25rem, 800) e "Alertas por SMS: mande seu CEP para 40199". Com qualquer estação em alerta ou emergência o 199 cresce para 1,75rem.
 
 ### Topo
-Marca (ícone SVG de 30px + "Nível Rio" em 800, 1,375rem) e "Atualizado às…"; linha de tinta de 2px embaixo. Quando os dados ficam velhos, "Atualizado" passa a emergencia-txt em 700.
+Marca (ícone SVG de 30px + "Nível Rio" em 800, 1,375rem) e, à direita, "Atualizado às…" e o botão do tema; linha de tinta de 2px embaixo. Quando os dados ficam velhos, "Atualizado" passa a emergencia-txt em 700.
+
+**Botão do tema:** quadrado de 44px com borda de tinta de 2px e canto de 4px, como os outros botões, só com ícone: lua no claro, sol no escuro. É um botão de alternar (`aria-pressed`, nome "Tema escuro"). O `<head>` de cada página aplica a escolha guardada antes de desenhar, para o claro não piscar; mapa e gráfico, que pintam as cores em JavaScript, são refeitos na troca (evento `tema`, em `js/tema.js`). A cor da barra do navegador (`theme-color`) acompanha o reboco do tema. Em telas de até 400px a marca e o "Atualizado" encolhem um pouco para tudo caber numa linha.
 
 ### Gráfico da estação
 A parede esticada no tempo.

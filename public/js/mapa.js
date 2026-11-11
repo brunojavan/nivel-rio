@@ -9,7 +9,8 @@ import { cotaAConfirmar, destaqueDaCidade, estadoDe, infoTendencia } from './par
 
 const ESTILOS = { claro: 'https://tiles.openfreemap.org/styles/positron', escuro: 'https://tiles.openfreemap.org/styles/dark' };
 const LIMITES = [[-51.4, -28.6], [-47.6, -25.9]];
-const escuro = () => matchMedia('(prefers-color-scheme: dark)').matches;
+// O tema vem do botão do topo (js/tema.js), não do sistema.
+const escuro = () => document.documentElement.dataset.tema === 'escuro';
 
 let biblioteca = null;
 async function carregarBiblioteca() {

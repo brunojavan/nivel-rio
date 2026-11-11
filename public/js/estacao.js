@@ -12,7 +12,7 @@ const PERIODOS = [[24, '24 horas'], [72, '3 dias'], [168, '7 dias'], [720, '30 d
 let dados = null, item = null, barragem = false;
 let horas = guardado('horas', 24);
 if (!PERIODOS.some(([h]) => h === horas)) horas = 24;
-let mapaCriado = false;
+let mapaCriado = false, mapaEstacao = null;
 
 const nomeRio = (e) => (e.rio ? (e.rio.startsWith('Rio ') || e.rio.startsWith('Ribeirão') ? e.rio : `Rio ${e.rio}`) : 'Agora');
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -232,6 +232,8 @@ function desenhar() {
   ].filter(Boolean));
   desenharGrafico();
   mapaCriado = false;
+  mapaEstacao?.remove();
+  mapaEstacao = null;
   observarMapa();
   atualizarTopo();
 }
@@ -245,10 +247,19 @@ function observarMapa() {
     mapaCriado = true;
     obs.disconnect();
     const { criarMapa } = await import('./mapa.js');
-    criarMapa(caixa, dados, { foco: id, zoomFoco: 11 });
+    mapaEstacao = await criarMapa(caixa, dados, { foco: id, zoomFoco: 11 });
   }, { rootMargin: '200px' });
   obs.observe(caixa);
 }
+
+// Trocou o tema no botão do topo: gráfico e mapa pintam as cores ao desenhar, então são refeitos.
+addEventListener('tema', async () => {
+  if (item) desenharGrafico();
+  if (!mapaEstacao) return;
+  mapaEstacao.remove();
+  $('#mapa-estacao').replaceChildren();
+  mapaEstacao = await (await import('./mapa.js')).criarMapa($('#mapa-estacao'), dados, { foco: id, zoomFoco: 11 });
+});
 
 function atualizarTopo() {
   if (!dados) return;

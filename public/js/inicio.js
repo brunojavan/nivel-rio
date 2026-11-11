@@ -253,6 +253,14 @@ $('#ordem-az').addEventListener('click', () => { ordem = 'az'; guardar('ordem', 
 
 await carregar();
 if (dados) import('./mapa.js').then(async ({ criarMapa }) => { mapa = await criarMapa($('#mapa'), dados); });
+
+// Trocou o tema no botão do topo: o mapa pinta as cores na criação, então é refeito com as novas.
+addEventListener('tema', async () => {
+  if (!mapa) return;
+  mapa.remove();
+  $('#mapa').replaceChildren(el('div', { class: 'mapa-carregando' }, 'Carregando o mapa…'));
+  mapa = await (await import('./mapa.js')).criarMapa($('#mapa'), dados);
+});
 setInterval(() => { if (document.visibilityState === 'visible') carregar(); }, ATUALIZAR_MS);
 setInterval(() => { if (dados) atualizarTopo(); }, 30_000);
 document.addEventListener('visibilitychange', () => {

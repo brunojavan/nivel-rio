@@ -725,7 +725,7 @@
       }
     ],
     "theme": {
-      "dark": "prefers-color-scheme: dark troca os tokens pelos de sufixo -noite; links usam link-noite."
+      "dark": "Claro é o padrão. O botão do topo põe data-tema=\"escuro\" na raiz, que troca os tokens pelos de sufixo -noite (links usam link-noite); a escolha fica no localStorage (chave tema)."
     },
     "mapa": {
       "basemap": "OpenFreeMap recolorido: terra reboco-fundo, água #B9C6D6 (#2A3A52 à noite), ruas #E4E7E8 (#323A40), verde #CBD3CC (#28302F), texto tinta-2.",
