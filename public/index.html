@@ -3,18 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nível Rio · rios da bacia do Itajaí agora</title>
-  <meta name="description" content="Mapa e nível dos rios Itajaí-Açu, Itajaí-Mirim e afluentes, cidade por cidade, e as barragens da bacia com as comportas, a cada 5 minutos.">
-  <meta name="theme-color" content="#1769c2">
-  <meta property="og:title" content="Nível Rio · rios da bacia do Itajaí agora">
-  <meta property="og:description" content="Mapa e nível dos rios Itajaí-Açu, Itajaí-Mirim e afluentes, cidade por cidade, e as barragens da bacia com as comportas, a cada 5 minutos.">
+  <title>Nível Rio: os rios da bacia do Itajaí agora</title>
+  <meta name="description" content="O nível do rio na sua cidade e em toda a bacia do Itajaí, com as cotas oficiais e as marcas das cheias passadas, atualizado a cada 5 minutos.">
+  <meta name="theme-color" content="#CFD4D6">
+  <meta property="og:title" content="Nível Rio: os rios da bacia do Itajaí agora">
+  <meta property="og:description" content="O nível do rio na sua cidade e em toda a bacia do Itajaí, com as cotas oficiais e as marcas das cheias passadas, atualizado a cada 5 minutos.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
-  <link rel="icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/favicon@3x.png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/fontes/overpass-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
   <link rel="modulepreload" href="/js/comum.js">
-  <link rel="modulepreload" href="/js/graficos.js">
+  <link rel="modulepreload" href="/js/parede.js">
+  <link rel="modulepreload" href="/js/componentes.js">
   <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
@@ -26,74 +29,74 @@
 </header>
 
 <main class="largura">
-  <div class="aviso-dc">
-    <strong>Este site não substitui a Defesa Civil.</strong>
-    <span>Em emergência ligue <a href="tel:199">199</a>. Alertas por SMS: mande o seu CEP para <strong>40199</strong>.</span>
+  <noscript><p class="vazio">Este site precisa de JavaScript ligado para mostrar os níveis. Em emergência, ligue 199.</p></noscript>
+  <h1 class="so-leitor">Nível dos rios da bacia do Itajaí agora</h1>
+  <p class="dc" id="dc">
+    <span>Este site não substitui a Defesa Civil.</span>
+    <span>Emergência: <a class="tel" href="tel:199">199</a></span>
+    <span>Alertas por SMS: mande seu CEP para <a href="sms:40199">40199</a></span>
+  </p>
+
+  <div class="primeira">
+    <p class="bacia" id="bacia" role="status" aria-live="polite">Carregando os níveis…</p>
+    <section id="grave" class="bloco-cidade grave" aria-live="polite" hidden></section>
+    <section id="cidade" aria-label="Sua cidade"></section>
+    <section class="mapa-bloco" aria-labelledby="titulo-mapa">
+      <h2 id="titulo-mapa">Mapa da bacia</h2>
+      <p class="legenda" aria-label="Legenda do mapa">
+        <span><i class="f-normal"></i>normal</span>
+        <span><i class="f-atencao"></i>atenção</span>
+        <span><i class="f-alerta"></i>alerta</span>
+        <span><i class="f-emergencia"></i>emergência</span>
+        <span><i class="semcota"></i>sem cota oficial</span>
+        <span><i class="f-parada"></i>parada</span>
+      </p>
+      <div id="mapa" class="mapa"><div class="mapa-carregando">Carregando o mapa…</div></div>
+    </section>
   </div>
 
-  <div id="situacao-geral" class="situacao-geral" hidden></div>
-
-  <section class="mapa-bloco" aria-label="Mapa da bacia do Itajaí com o nível de cada estação">
-    <div id="mapa" class="mapa"></div>
-    <div class="mapa-carregando">Carregando o mapa…</div>
-    <div id="resumo-mapa" class="resumo-mapa"></div>
-    <div id="legenda"></div>
+  <section class="secao" id="estacoes" aria-labelledby="titulo-estacoes">
+    <h2 id="titulo-estacoes">Todas as estações</h2>
+    <p class="sub">Quem está em atenção ou pior aparece primeiro. Toque numa estação para ver o gráfico e as marcas dela.</p>
+    <div class="ordem" role="group" aria-label="Ordem da lista">
+      <button type="button" class="botao" id="ordem-rio" aria-pressed="true">Na ordem do rio</button>
+      <button type="button" class="botao" id="ordem-az" aria-pressed="false">Cidades de A a Z</button>
+    </div>
+    <div id="lista"><p class="vazio">Carregando…</p></div>
   </section>
 
-  <div class="barra-visao">
-    <h2 id="titulo-visao">Níveis por cidade</h2>
-    <div class="abas" role="tablist" aria-label="Como agrupar as estações">
-      <button type="button" role="tab" id="aba-cidade" aria-selected="true" aria-controls="lista">Por cidade</button>
-      <button type="button" role="tab" id="aba-regiao" aria-selected="false" aria-controls="lista">Por região do rio</button>
-    </div>
-  </div>
-  <div id="lista" role="tabpanel">
-    <p class="vazio">Carregando os dados…</p>
-  </div>
-
-  <section aria-labelledby="titulo-barragens">
-    <div class="barra-visao">
-      <h2 id="titulo-barragens">Barragens</h2>
-      <span class="suave" style="font-size:.85rem">Seguram a água no Alto Vale; comporta azul está aberta.</span>
-    </div>
-    <div id="barragens" class="grade"></div>
+  <section class="secao" aria-labelledby="titulo-barragens">
+    <h2 id="titulo-barragens">Barragens do Alto Vale</h2>
+    <p class="sub">Com as comportas abertas, a água segue rio abaixo normalmente. Quando a Defesa Civil fecha as comportas numa cheia, a barragem segura a água para diminuir a enchente nas cidades de baixo.</p>
+    <div id="barragens"></div>
   </section>
 
-  <section aria-labelledby="titulo-chuva" id="bloco-chuva" hidden>
-    <div class="barra-visao">
-      <h2 id="titulo-chuva">Chuva nas últimas 24 horas</h2>
-      <span class="suave" style="font-size:.85rem">Pluviômetros da Defesa Civil de SC na bacia. No mapa, toque em "Chuva 24 h".</span>
-    </div>
-    <div id="chuva" class="cartao"></div>
+  <section class="secao" id="bloco-chuva" aria-labelledby="titulo-chuva" hidden>
+    <h2 id="titulo-chuva">Chuva nas últimas 24 horas</h2>
+    <p class="sub" id="chuva-resumo"></p>
+    <ul class="linhas chuva" id="chuva"></ul>
   </section>
 
-  <section aria-labelledby="titulo-avisos">
-    <div class="barra-visao">
-      <h2 id="titulo-avisos">Avisos das últimas 24 horas</h2>
-      <span class="suave" style="font-size:.85rem">Mudança de faixa, subida rápida, comporta e fonte fora do ar.</span>
-    </div>
-    <div id="avisos" class="cartao"></div>
+  <section class="secao" aria-labelledby="titulo-avisos">
+    <h2 id="titulo-avisos">Avisos das últimas 24 horas</h2>
+    <p class="sub">Quando uma estação muda de faixa, sobe rápido, uma comporta abre ou fecha, ou uma fonte sai do ar.</p>
+    <div id="avisos"></div>
   </section>
 
-  <details class="sobre cartao" id="sobre">
+  <details class="sobre" id="sobre">
     <summary>Sobre os dados</summary>
-    <p>Os dados vêm de três fontes oficiais, consultadas a cada 5 minutos:</p>
-    <ul>
-      <li><strong>Defesa Civil de Santa Catarina</strong> (Rede Integrada de Monitoramento): estações da bacia e as três barragens, com o estado de cada comporta.</li>
-      <li><strong>Defesa Civil de Itajaí</strong>: as 11 estações da cidade e as cotas de cada uma.</li>
-      <li><strong>AlertaBlu</strong> (Defesa Civil de Blumenau): nível oficial de Blumenau, de hora em hora.</li>
-    </ul>
+    <p>Os níveis vêm de três fontes oficiais, consultadas a cada 5 minutos: a Defesa Civil de Santa Catarina (estações da bacia, barragens e comportas, pluviômetros), a Defesa Civil de Itajaí (11 estações da cidade, com cotas) e o AlertaBlu, da Defesa Civil de Blumenau (nível oficial de Blumenau, de hora em hora).</p>
     <p>Situação de cada fonte agora:</p>
-    <ul id="fontes" class="suave"></ul>
-    <p>Cada estação mostra o horário da sua última medição. Quando passa do dobro do intervalo normal sem leitura nova, aparece "sem leitura nova" e o ponto fica cinza no mapa. A tendência compara com a leitura de 1 hora antes. Os gráficos pequenos mostram as últimas 24 horas.</p>
-    <p>As faixas (atenção, alerta, emergência) usam as cotas publicadas pela própria fonte. Pontos azuis no mapa são estações cuja fonte não publica cotas. As cotas de Rio do Sul ainda divergem entre as fontes e estão marcadas "a confirmar".</p>
-    <p>Estações marcadas "altitude" medem a altura em relação ao nível do mar, e não na régua do rio: o número não se compara com o das outras.</p>
-    <p>Leituras de defeito do sensor (um salto de mais de 1 m que volta em até meia hora) são retiradas dos gráficos e listadas na <a href="/saude">página de saúde do coletor</a>.</p>
-    <p>Mapa: traçado dos rios do OpenStreetMap; fundo do OpenFreeMap, carregado direto pelo seu navegador.</p>
-    <p>Os dados pertencem às Defesas Civis. O projeto só guarda e mostra. Código aberto em <a href="https://github.com/brunojavan/nivel-rio">github.com/brunojavan/nivel-rio</a>.</p>
+    <ul id="fontes"></ul>
+    <p><strong>Cota</strong> é a altura do rio, medida na régua da estação, a partir da qual a Defesa Civil considera atenção, alerta ou emergência. Cada cidade tem as suas; só aparecem onde a fonte publica. As de Rio do Sul ainda divergem entre as fontes e estão "a confirmar".</p>
+    <p><strong>Marcas de cheias passadas</strong> só aparecem com fonte. Blumenau: tabela da Defesa Civil de Blumenau publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no <a href="https://doi.org/10.17632/cj64gycsw8.2">Mendeley Data</a>, licença CC BY 4.0. Rio do Sul: reportagens da NSC Total com dados da Defesa Civil e da prefeitura.</p>
+    <p>Estações que medem <strong>altitude</strong> mostram a altura da água acima do mar, não a régua: o número não se compara com o das outras. Perto da foz, em Itajaí, o rio <strong>sobe e desce com a maré</strong> duas vezes por dia sem que isso seja cheia.</p>
+    <p>Leituras de defeito do sensor (um salto de mais de 1 m que volta em até meia hora) saem dos gráficos e ficam listadas na <a href="/saude">página de saúde do coletor</a>.</p>
+    <p>Mapa: traçado dos rios do OpenStreetMap; fundo do OpenFreeMap, carregado direto pelo seu navegador. Letra: Overpass (licença OFL).</p>
+    <p>Os dados pertencem às Defesas Civis; o projeto só guarda e mostra. Código aberto em <a href="https://github.com/brunojavan/nivel-rio">github.com/brunojavan/nivel-rio</a>.</p>
   </details>
 
-  <p class="rodape">Primeira versão, em teste. <a href="/saude">Saúde do coletor</a></p>
+  <p class="rodape">Em teste. <a href="/saude">Saúde do coletor</a></p>
 </main>
 
 <script type="module" src="/js/inicio.js"></script>

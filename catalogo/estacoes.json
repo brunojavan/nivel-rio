@@ -215,6 +215,22 @@
       "codigos": {
         "estado": "DCSC-00013"
       },
+      "marcas": [
+        {
+          "data": "2023-11-18",
+          "nivel": 13.04,
+          "nota": "a segunda maior registrada; a maior foi a de 1983",
+          "fonte": "NSC Total, citando a Defesa Civil e a prefeitura de Rio do Sul",
+          "url": "https://www.nsctotal.com.br/?p=7005435"
+        },
+        {
+          "data": "2023-10-13",
+          "nivel": 11.86,
+          "nota": "a cheia mais longa: 12 dias acima de 7,5 m",
+          "fonte": "NSC Total, citando a Defesa Civil e a prefeitura de Rio do Sul",
+          "url": "https://www.nsctotal.com.br/?p=6975910"
+        }
+      ],
       "situacao": "ativa",
       "conferir": [
         "cotas: Itajaí copia 5/6/7 m, Asthon usa 4,5/5,5/6,5 m e o projeto de 2023 usava 3/6/8 m"
@@ -315,6 +331,45 @@
         "alertablu": "nivel_oficial",
         "estado": "DCSC-00026"
       },
+      "marcas": [
+        {
+          "data": "1880-09-23",
+          "nivel": 17.1,
+          "nota": "a maior registrada",
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        },
+        {
+          "data": "1983-07-09",
+          "nivel": 15.34,
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        },
+        {
+          "data": "1984-08-07",
+          "nivel": 15.46,
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        },
+        {
+          "data": "2008-11-24",
+          "nivel": 11.52,
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        },
+        {
+          "data": "2011-09-09",
+          "nivel": 12.6,
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        },
+        {
+          "data": "2023-10-12",
+          "nivel": 10.76,
+          "fonte": "Defesa Civil de Blumenau, tabela publicada por Melchioretto, Loos e Silva e Fonseca (Senac SC) no Mendeley Data, licença CC BY 4.0",
+          "url": "https://doi.org/10.17632/cj64gycsw8.2"
+        }
+      ],
       "situacao": "ativa",
       "conferir": [],
       "observacao": "Nível oficial de hora em hora pelo AlertaBlu, medido na Ponte Governador Adolfo Konder (código PADKND no arquivo de Itajaí; coordenadas do OpenStreetMap). O código DCSC-00026 do Estado em Blumenau é uma estação meteorológica (chuva, vento, temperatura): não mede o rio e não serve de reserva para o nível."
@@ -373,6 +428,7 @@
       "codigos": {
         "itajai": "DC11"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": []
     },
@@ -391,6 +447,7 @@
       "codigos": {
         "itajai": "DC02"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [],
       "observacao": "Em 7 nov 2026 repetiu o mesmo valor por 3h40 enquanto as vizinhas mudavam."
@@ -410,6 +467,7 @@
       "codigos": {
         "itajai": "DC01"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [],
       "observacao": "Cotas mudaram desde 2023: eram 0,90/1,10/1,30 m e passaram a 1,21/1,61/1,75 m."
@@ -486,6 +544,7 @@
       "codigos": {
         "itajai": "DC10"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": []
     },
@@ -504,6 +563,7 @@
       "codigos": {
         "itajai": "DC05"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "ordem"
@@ -524,6 +584,7 @@
       "codigos": {
         "itajai": "DC03"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "ordem"
@@ -544,6 +605,7 @@
       "codigos": {
         "itajai": "DC06"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "ordem"
@@ -564,6 +626,7 @@
       "codigos": {
         "itajai": "DC04"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "ordem"
@@ -582,6 +645,7 @@
       "codigos": {
         "estado": "DCSC-00163"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "rio",
@@ -824,6 +888,7 @@
       "codigos": {
         "itajai": "DC07"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": []
     },
@@ -842,6 +907,7 @@
       "codigos": {
         "itajai": "DC09"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": [
         "ordem"
@@ -862,6 +928,7 @@
       "codigos": {
         "itajai": "DC08"
       },
+      "mare": true,
       "situacao": "ativa",
       "conferir": []
     }

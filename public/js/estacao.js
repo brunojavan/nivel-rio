@@ -1,92 +1,94 @@
-// Página de uma estação (/estacao/{id}) ou de uma barragem: nível agora, tendência, projeção, gráfico
-// com as cotas, estações do mesmo rio e da mesma cidade, mapa e detalhes da fonte.
-import {
-  carregarDados, CONFERIR, duracaoTexto, el, faixaDe, guardado, guardar, hora, idadeTexto, marca,
-  NOMES_FAIXA, num, projecao, tendencia,
-} from './comum.js';
-import { chipsEstacao, idadeEl, linhaEstacao, listaAvisos, pintarIdade } from './componentes.js';
-import { anel, graficoSerie, linhaTempoComportas, regua } from './graficos.js';
+// Página de uma estação (/estacao/{id}) ou de uma barragem, no mundo "Marcas da enchente": a parede e a
+// placa, a projeção quando o rio sobe, o gráfico com as cotas, as cheias passadas com fonte, o mesmo rio,
+// a mesma cidade, o mapa e os detalhes da fonte.
+import { carregarDados, CONFERIR, duracaoTexto, el, guardado, guardar, hora, horaCurta, NOMES_FAIXA, num, projecao } from './comum.js';
+import { linhaEstacao, listaAvisos } from './componentes.js';
+import { graficoSerie, linhaTempoComportas } from './graficos.js';
+import { gravidade, icone, leitura } from './parede.js';
 
 const $ = (s) => document.querySelector(s);
 const id = decodeURIComponent(location.pathname.split('/')[2] ?? '');
-const PERIODOS = [[24, '24 h'], [72, '3 dias'], [168, '7 dias'], [720, '30 dias']];
+const PERIODOS = [[24, '24 horas'], [72, '3 dias'], [168, '7 dias'], [720, '30 dias']];
 let dados = null, item = null, barragem = false;
 let horas = guardado('horas', 24);
 if (!PERIODOS.some(([h]) => h === horas)) horas = 24;
 let mapaCriado = false;
+
+const nomeRio = (e) => (e.rio ? (e.rio.startsWith('Rio ') || e.rio.startsWith('Ribeirão') ? e.rio : `Rio ${e.rio}`) : 'Agora');
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const dataPorExtenso = (iso) => `${Number(iso.slice(8, 10))} de ${MESES[Number(iso.slice(5, 7)) - 1]} de ${iso.slice(0, 4)}`;
 
 function achar() {
   item = dados.estacoes.find((e) => e.id === id) ?? dados.barragens.find((b) => b.id === id) ?? null;
   barragem = !!item && 'comportas' in item;
 }
 
-// Cabeça: nome, nível grande, tendência, projeção e a régua com as cotas.
 function cabeca() {
-  const principal = el('div', { class: 'cartao' });
-  if (barragem) {
-    principal.append(
-      el('h1', {}, item.nome), el('div', { class: 'onde' }, `${item.municipio} · ${item.rio}`),
-      el('div', { class: 'grande' },
-        el('span', { class: 'valor' }, item.ocupacao_pct != null ? num(item.ocupacao_pct, 1) : '—', el('small', {}, '% cheia'))),
-      el('div', { class: 'pe', style: 'justify-content:flex-start;gap:14px;font-size:.88rem' },
-        item.montante_m != null ? el('span', {}, `Nível do reservatório: ${num(item.montante_m)} m`) : null,
-        item.volume_hm3 != null ? el('span', {}, `Volume: ${num(item.volume_hm3, 1)} milhões de m³`) : null,
-        idadeEl(item)));
-    const lado = el('div', { class: 'cartao', style: 'display:grid;place-items:center' }, anel(item.ocupacao_pct, { tamanho: 160, espessura: 16, rotulo: `Ocupação de ${item.nome}` }));
-    return el('section', { class: 'cabeca-estacao' }, principal, lado);
-  }
-
-  const f = faixaDe(item.nivel, item.cotas);
-  const t = tendencia(item);
-  principal.append(
-    el('div', { class: 'chips' }, chipsEstacao(item, dados.estacoes)),
-    el('h1', { style: 'margin-top:6px' }, item.nome),
-    el('div', { class: 'onde' }, [item.municipio, item.rio ?? 'rio a confirmar'].join(' · ')),
-    el('div', { class: 'grande' },
-      el('span', { class: 'valor' }, item.nivel != null ? num(item.nivel) : '—', el('small', {}, 'm')),
-      t ? el('span', { class: `tendencia ${t.classe}` }, t.classe === 'estavel' ? '● estável na última hora' : `${t.texto} na última hora`) : null),
-    el('div', { class: 'pe', style: 'justify-content:flex-start;gap:14px;font-size:.88rem' },
-      idadeEl(item),
-      item.h3 ? el('span', {}, `3 h antes: ${num(item.h3.nivel)} m`) : null));
-  const p = projecao(item);
-  if (p)
-    principal.append(el('div', { class: `projecao${p.faixa === 'emergencia' || p.faixa === 'alerta' ? ' grave' : ''}` },
-      el('b', {}, `Nesse ritmo (+${num(p.cmh, 0)} cm/h), chega à cota de ${NOMES_FAIXA[p.faixa].toLowerCase()} (${num(p.cota)} m) em cerca de ${duracaoTexto(p.horas)}.`),
-      ' Estimativa simples pela última hora: não considera chuva, barragens nem a água que ainda vem de rio acima.'));
-  else if (f && f !== 'normal' && t?.classe === 'desce')
-    principal.append(el('div', { class: 'projecao' }, `Descendo ${num(-t.cmh, 0)} cm/h, ainda acima da cota de ${NOMES_FAIXA[f].toLowerCase()}.`));
-
-  const partes = [principal];
-  if (item.cotas && item.referencia !== 'altitude') {
-    const c = item.cotas;
-    partes.push(el('div', { class: 'cartao regua-caixa' },
-      regua(item.nivel, c),
-      el('div', { style: 'font-size:.8rem;align-self:center;max-width:150px' },
-        el('p', { class: 'titulo-cartao' }, 'Cotas'),
-        el('div', { class: 'suave' }, `Segundo ${c.fonte}.`),
-        item.a_conferir.some((x) => x.startsWith('cotas')) ? el('div', { style: 'margin-top:6px' }, 'A confirmar: as fontes publicam valores diferentes.') : null)));
-  }
-  return el('section', { class: 'cabeca-estacao' }, ...partes);
+  const compartilhar = el('button', { type: 'button', class: 'botao', id: 'partilhar' }, 'Compartilhar');
+  compartilhar.addEventListener('click', async () => {
+    const url = location.href.split('#')[0];
+    try {
+      if (navigator.share) await navigator.share({ title: document.title, url });
+      else { await navigator.clipboard.writeText(url); compartilhar.textContent = 'Link copiado'; setTimeout(() => (compartilhar.textContent = 'Compartilhar'), 2500); }
+    } catch { /* cancelado */ }
+  });
+  return el('div', { class: 'cab-estacao' },
+    el('p', { class: 'voltar' }, el('a', { href: '/' }, icone('volta'), 'Todas as estações')),
+    el('div', { class: 'cab-linha' },
+      el('div', {}, el('h1', {}, item.nome), el('p', { class: 'onde' }, [item.municipio, item.rio].filter(Boolean).join(', '))),
+      compartilhar));
 }
 
-function cartaoGrafico() {
-  const periodos = el('div', { class: 'periodos', role: 'group', 'aria-label': 'Período do gráfico' });
+// Leitura de agora: parede e placa, com a projeção quando o rio sobe.
+function agora() {
+  if (barragem) return agoraBarragem();
+  const p = projecao(item);
+  const explica = p
+    ? `Nesse ritmo (+${num(p.cmh, 0)} cm por hora), chega à cota de ${NOMES_FAIXA[p.faixa].toLowerCase()} (${num(p.cota)} m) em cerca de ${duracaoTexto(p.horas)}. É uma conta simples pela última hora: não considera chuva, barragens nem a água que ainda vem de rio acima.`
+    : item.marcas?.length ? 'Na parede: a água de agora, as cotas oficiais e as cheias passadas.' : item.cotas ? 'Na parede: a água de agora e as cotas oficiais.' : null;
+  return el('section', { class: 'bloco-cidade', 'aria-label': 'Nível agora' }, leitura(item, { titulo: nomeRio(item), explica }));
+}
+
+function agoraBarragem() {
+  const abertas = item.comportas.filter((c) => c.aberta).length;
+  const pct = item.ocupacao_pct;
+  const altura = 360;
+  const parede = el('figure', { class: 'parede', style: `--m:${(altura - 30) / 100}px;--altura:${altura}px`, role: 'img', 'aria-label': `Reservatório ${pct != null ? num(pct, 0) : '?'}% cheio` });
+  const regua = el('div', { class: 'regua', 'aria-hidden': 'true' });
+  for (const v of [25, 50, 75, 100]) regua.append(el('span', { style: `bottom:${(v * (altura - 30)) / 100}px` }, `${v}`));
+  parede.append(regua, el('div', { class: 'cota', style: '--v:100;--c:var(--tinta);--c-txt:var(--tinta)', 'aria-hidden': 'true' }, el('b', {}, 'cheia'), ' 100%'));
+  if (pct != null) parede.append(el('div', { class: 'agua', style: `--v:${pct}`, 'aria-hidden': 'true' }, el('span', {}, `${num(pct, 0)}%`)));
+  const coluna = el('div', { class: 'agora' },
+    el('div', { class: 'placa' }, el('p', { class: 'est' }, 'Ocupação do reservatório'), el('p', { class: 'valor' }, pct != null ? num(pct, 0) : '—', el('small', {}, '%'))),
+    el('p', { class: 'estado' }, item.comportas.length
+      ? abertas === item.comportas.length ? `Todas as ${abertas} comportas estão abertas: a água segue rio abaixo normalmente.`
+        : abertas ? `${abertas} de ${item.comportas.length} comportas abertas.`
+          : `As ${item.comportas.length} comportas estão fechadas: a barragem está segurando a água.`
+      : 'Sem informação das comportas.'),
+    item.montante_m != null ? el('p', { class: 'med' }, `Nível do reservatório: ${num(item.montante_m)} m acima do mar.`) : null,
+    item.volume_hm3 != null ? el('p', { class: 'med' }, `Volume: ${num(item.volume_hm3, 1)} milhões de m³.`) : null,
+    item.medido_em ? el('p', { class: 'med' }, `Medido ${horaCurta(item.medido_em).includes(',') ? 'em' : 'às'} ${horaCurta(item.medido_em)}.`) : null);
+  return el('section', { class: 'bloco-cidade', 'aria-label': 'Reservatório agora' }, el('div', { class: 'leitura' }, parede, coluna));
+}
+
+function secaoGrafico() {
+  const periodos = el('div', { class: 'ordem', role: 'group', 'aria-label': 'Período do gráfico' });
   for (const [h, rot] of PERIODOS)
     periodos.append(el('button', {
-      type: 'button', 'aria-pressed': String(h === horas),
+      type: 'button', class: 'botao', 'aria-pressed': String(h === horas),
       onclick: (ev) => {
         horas = h; guardar('horas', h);
         periodos.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === ev.currentTarget)));
         desenharGrafico();
       },
     }, rot));
-  return el('div', { class: 'cartao' },
-    el('div', { class: 'cartao-topo', style: 'align-items:center;flex-wrap:wrap' },
-      el('p', { class: 'titulo-cartao', style: 'margin:0' }, barragem ? 'Ocupação da barragem' : 'Nível do rio'), periodos),
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-grafico' },
+    el('h2', { id: 'titulo-grafico' }, barragem ? 'Como a ocupação andou' : 'Como o nível andou'),
+    periodos,
     el('div', { class: 'grafico', id: 'grafico' }),
-    el('div', { class: 'estatisticas', id: 'estatisticas' }),
+    el('dl', { class: 'estatisticas', id: 'estatisticas' }),
     barragem ? el('div', { id: 'comportas-tempo' }) : null,
-    el('p', { class: 'suave', id: 'nota-grafico', style: 'font-size:.76rem;margin:10px 0 0' }));
+    el('p', { class: 'nota', id: 'nota-grafico' }));
 }
 
 async function desenharGrafico() {
@@ -98,126 +100,140 @@ async function desenharGrafico() {
     if (!r.ok) throw new Error();
     s = await r.json();
   } catch {
-    caixa.replaceChildren(el('p', { class: 'vazio' }, 'Não foi possível carregar o gráfico.'));
+    caixa.replaceChildren(el('p', { class: 'vazio' }, 'Não foi possível carregar o gráfico. Tente de novo em instantes.'));
     return;
   }
-  const valores = barragem ? s.ocupacao_pct : s.nivel_m;
-  graficoSerie(caixa, { t: s.t, v: valores }, {
+  // A série guardada pode estar alguns minutos atrás da leitura de agora (a da placa). O gráfico termina nela,
+  // para a "última leitura" do gráfico nunca ser mais velha que o número grande da página.
+  const serie = barragem ? s.ocupacao_pct : s.nivel_m;
+  const agora = barragem ? item.ocupacao_pct : item.nivel, tAgora = item.medido_em ? Date.parse(item.medido_em) / 1000 : null;
+  const t = [...s.t], valores = [...serie];
+  if (agora != null && tAgora && (!t.length || tAgora > t.at(-1))) { t.push(tAgora); valores.push(agora); }
+  graficoSerie(caixa, { t: s.t, v: serie }, {
+    agora: agora != null && tAgora ? { t: tAgora, v: agora } : null,
     cotas: barragem || item.referencia === 'altitude' ? null : item.cotas,
     unidade: barragem ? '%' : ' m', casas: barragem ? 1 : 2, intervalo: item.intervalo_s, rotulo: barragem ? 'Ocupação' : 'Nível',
-    altura: innerWidth < 560 ? 230 : 300, minimo: barragem ? 2 : 0.2,
+    altura: innerWidth < 560 ? 240 : 320, minimo: barragem ? 2 : 0.2,
   });
 
-  // Números do período.
-  const pares = s.t.map((t, i) => [t, valores[i]]).filter(([, v]) => v != null);
+  const pares = t.map((x, i) => [x, valores[i]]).filter(([, v]) => v != null);
   const est = $('#estatisticas');
+  est.replaceChildren();
   if (pares.length) {
     const max = pares.reduce((a, b) => (b[1] > a[1] ? b : a));
     const min = pares.reduce((a, b) => (b[1] < a[1] ? b : a));
-    const vari = pares[pares.length - 1][1] - pares[0][1];
+    const vari = pares.at(-1)[1] - pares[0][1];
     const u = barragem ? '%' : ' m', c = barragem ? 1 : 2;
-    const caixaNum = (valor, rotulo) => el('div', {}, el('b', {}, valor), el('span', {}, rotulo));
-    est.replaceChildren(
-      caixaNum(num(max[1], c) + u, `máxima · ${hora(new Date(max[0] * 1000).toISOString())}`),
-      caixaNum(num(min[1], c) + u, `mínima · ${hora(new Date(min[0] * 1000).toISOString())}`),
-      caixaNum(`${vari >= 0 ? '+' : '−'}${barragem ? num(Math.abs(vari), 1) + ' pontos' : num(Math.abs(vari) * 100, 0) + ' cm'}`, 'variação no período'),
-      caixaNum(pares.length.toLocaleString('pt-BR'), 'leituras guardadas'));
-  } else est.replaceChildren();
-
+    const quando = (t) => horaCurta(new Date(t * 1000).toISOString());
+    const par = (rot, val) => [el('dt', {}, rot), el('dd', {}, val)];
+    est.append(
+      ...par('Máxima', `${num(max[1], c)}${u}, ${quando(max[0])}`),
+      ...par('Mínima', `${num(min[1], c)}${u}, ${quando(min[0])}`),
+      ...par('Variação', barragem ? `${vari >= 0 ? '+' : '−'}${num(Math.abs(vari), 1)} pontos` : `${vari >= 0 ? 'subiu' : 'desceu'} ${Math.abs(vari) < 1 ? `${num(Math.abs(vari) * 100, 0)} cm` : `${num(Math.abs(vari))} m`}`),
+      ...par('Leituras', pares.length.toLocaleString('pt-BR')));
+  }
   const primeira = s.t[0];
-  const nota = $('#nota-grafico');
-  if (nota) nota.textContent = primeira && primeira - (Date.now() / 1000 - horas * 3600) > 6 * 3600
-    ? `O histórico guardado desta estação começa em ${hora(new Date(primeira * 1000).toISOString())}. O de 1º de agosto em diante está sendo importado aos poucos (até perto de 18 nov).`
+  $('#nota-grafico').textContent = primeira && primeira - (Date.now() / 1000 - horas * 3600) > 6 * 3600
+    ? `O histórico guardado desta estação começa em ${hora(new Date(primeira * 1000).toISOString())}. O de agosto em diante está sendo importado aos poucos, até perto de 18 de novembro.`
     : '';
-
   if (barragem && s.comportas?.length) {
     const ate = Date.now() / 1000, de = ate - horas * 3600;
     $('#comportas-tempo').replaceChildren(
-      el('p', { class: 'titulo-cartao', style: 'margin:14px 0 4px' }, 'Comportas no período (azul = aberta)'),
-      linhaTempoComportas(s.comportas, de, ate),
-      el('p', { class: 'suave', style: 'font-size:.74rem;margin:6px 0 0' }, 'O registro das comportas começou em 7 nov 2026; antes disso o trilho fica vazio.'));
+      el('h3', {}, 'Comportas no período'),
+      el('p', { class: 'nota' }, 'Preenchido onde a comporta esteve aberta. O registro começou em 7 de novembro de 2026.'),
+      linhaTempoComportas(s.comportas, de, ate));
   }
 }
 
-function cartaoMesmoRio() {
+function secaoMarcas() {
+  if (!item.marcas?.length) return null;
+  const fontes = [...new Map(item.marcas.map((m) => [m.url, m])).values()];
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-marcas' },
+    el('h2', { id: 'titulo-marcas' }, 'Cheias passadas'),
+    el('p', { class: 'sub' }, `As marcas pintadas na parede, com a altura que o rio chegou em ${item.municipio}.`),
+    el('ul', { class: 'linhas marcas' }, [...item.marcas].sort((a, b) => b.nivel - a.nivel).map((m) =>
+      el('li', { class: 'linha marca' }, el('span', { class: 'nome' }, dataPorExtenso(m.data)), el('span', { class: 'nivel' }, num(m.nivel), el('small', {}, ' m')), m.nota ? el('span', { class: 'sub' }, m.nota) : null))),
+    // Uma fonte por nome; quando ela tem várias páginas (uma reportagem por cheia), um link por data.
+    el('p', { class: 'nota' }, 'Fonte: ', ...[...new Set(fontes.map((m) => m.fonte))].flatMap((nome, i) => {
+      const deste = fontes.filter((m) => m.fonte === nome);
+      return [i ? '; ' : '', deste.length === 1 ? el('a', { href: deste[0].url }, nome)
+        : [`${nome} (`, ...deste.flatMap((m, j) => [j ? ', ' : '', el('a', { href: m.url }, dataPorExtenso(item.marcas.find((x) => x.url === m.url).data).replace(/^\d+ de /, ''))]), ')']];
+    }), '.'));
+}
+
+function secaoMesmoRio() {
   if (!item.rio) return null;
   const lista = dados.estacoes.filter((e) => e.rio === item.rio).sort((a, b) => (a.ordem ?? 99) - (b.ordem ?? 99));
-  if (!lista.length || (lista.length === 1 && lista[0].id === id)) return null;
-  return el('div', { class: 'cartao' },
-    el('p', { class: 'titulo-cartao' }, `Rio ${item.rio.replace(/^Rio /, '')}, de cima para baixo`),
-    el('div', { class: 'linhas', style: 'margin-top:0' }, lista.map((e) => linhaEstacao(dados, e, { comCidade: true, atual: e.id === id }))));
+  if (lista.length < 2) return null;
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-rio' },
+    el('h2', { id: 'titulo-rio' }, `${nomeRio(item)}, de cima para baixo`),
+    el('div', { class: 'linhas' }, lista.map((e) => {
+      const l = linhaEstacao(dados, e, { comCidade: true });
+      if (e.id === id) { l.classList.add('atual'); l.setAttribute('aria-current', 'page'); }
+      return l;
+    })));
 }
 
-function cartaoMesmaCidade() {
+function secaoMesmaCidade() {
   const lista = dados.estacoes.filter((e) => e.municipio === item.municipio && e.id !== id && e.rio !== item.rio);
   if (!lista.length) return null;
-  return el('div', { class: 'cartao' },
-    el('p', { class: 'titulo-cartao' }, `Outras estações em ${item.municipio}`),
-    el('div', { class: 'linhas', style: 'margin-top:0' }, lista.map((e) => linhaEstacao(dados, e))));
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-cidade' },
+    el('h2', { id: 'titulo-cidade' }, `Outros pontos em ${item.municipio}`),
+    el('div', { class: 'linhas' }, lista.sort((a, b) => gravidade(b) - gravidade(a)).map((e) => linhaEstacao(dados, e))));
 }
 
-function cartaoComportas() {
-  if (!barragem || !item.comportas.length) return null;
-  return el('div', { class: 'cartao' },
-    el('p', { class: 'titulo-cartao' }, 'Comportas agora'),
-    el('ul', { class: 'info' }, item.comportas.map((c) => el('li', {},
-      el('span', { class: `comporta${c.aberta ? ' aberta' : ''}`, style: 'margin-right:8px' }, c.nome),
-      c.aberta ? 'aberta' : 'fechada',
-      el('span', { class: 'suave' }, c.desde_inicio_registro ? ` (já estava assim em ${hora(c.desde)}, quando o registro começou)` : ` desde ${hora(c.desde)}`)))));
-}
-
-function cartaoAvisos() {
-  const lista = (dados.avisos ?? []).filter((a) => a.estacao_id === id);
-  if (!lista.length) return null;
-  return el('div', { class: 'cartao' }, el('p', { class: 'titulo-cartao' }, 'Avisos das últimas 24 horas'), listaAvisos(lista, ''));
-}
-
-function cartaoSobre() {
-  const li = (rotulo, texto) => el('li', {}, el('b', {}, `${rotulo}: `), texto);
+function secaoSobre() {
   const linhas = [];
+  const par = (rot, val) => linhas.push(el('dt', {}, rot), el('dd', {}, val));
   if (barragem) {
-    linhas.push(li('Fonte', 'Defesa Civil de SC'));
-    if (item.medido_em) linhas.push(li('Última leitura', hora(item.medido_em)));
-    if (item.jusante_m != null) linhas.push(li('Rio logo abaixo da barragem', `${num(item.jusante_m)} m`));
-    if (item.vertido_m != null) linhas.push(li('Vertedouro', `${num(item.vertido_m)} m`));
+    par('Fonte', 'Defesa Civil de SC');
+    if (item.jusante_m != null) par('Rio logo abaixo', `${num(item.jusante_m)} m`);
+    for (const c of item.comportas) par(`Comporta ${c.nome}`, `${c.aberta ? 'aberta' : 'fechada'} ${c.desde_inicio_registro ? `(já estava assim em ${horaCurta(c.desde)}, quando o registro começou)` : `desde ${horaCurta(c.desde)}`}`);
   } else {
-    linhas.push(li('Fonte', item.fonte));
-    if (item.medido_em) linhas.push(li('Última medição', hora(item.medido_em)));
-    if (item.h1) linhas.push(li('1 hora antes', `${num(item.h1.nivel)} m (${hora(item.h1.medido_em)})`));
+    par('Fonte', item.fonte);
+    if (item.medido_em) par('Última medição', hora(item.medido_em));
+    if (item.h1) par('Uma hora antes', `${num(item.h1.nivel)} m (${horaCurta(item.h1.medido_em)})`);
     if (item.cotas) {
       const c = item.cotas;
-      const partes = [['atenção', c.atencao], ['alerta', c.alerta], ['emergência', c.emergencia]].filter(([, v]) => v != null).map(([n, v]) => `${n} ${num(v)} m`);
-      linhas.push(li('Cotas', `${partes.join(' · ')} (segundo ${c.fonte})`));
-    } else linhas.push(li('Cotas', 'a fonte não publica cotas para esta estação'));
-    linhas.push(li('Referência', item.referencia === 'regua' ? 'régua do rio' : item.referencia === 'altitude' ? 'altitude da água (metros acima do nível do mar); não se compara com a régua de outras estações' : 'a confirmar (o número parece ser altitude)'));
-    linhas.push(li('Intervalo normal', item.intervalo_s >= 3600 ? `uma leitura a cada ${item.intervalo_s / 3600} h` : `uma leitura a cada ${item.intervalo_s / 60} min`));
-    for (const c of item.a_conferir) linhas.push(li('A confirmar', CONFERIR[c] ?? c));
+      par('Cotas oficiais', `${[['atenção', c.atencao], ['alerta', c.alerta], ['emergência', c.emergencia]].filter(([, v]) => v != null).map(([n, v]) => `${n} ${num(v)} m`).join(', ')}, segundo ${c.fonte}`);
+    } else par('Cotas oficiais', 'a fonte não publica cota para esta estação');
+    par('Medida', item.referencia === 'regua' ? 'régua do rio' : item.referencia === 'altitude' ? 'altitude da água, em metros acima do mar; não se compara com a régua de outras estações' : 'a confirmar (o número parece ser altitude)');
+    par('Leituras', item.intervalo_s >= 3600 ? `uma a cada ${item.intervalo_s / 3600} hora` : `uma a cada ${item.intervalo_s / 60} minutos`);
+    if (item.mare) par('Maré', 'perto da foz, o rio sobe e desce com a maré duas vezes por dia');
+    for (const c of item.a_conferir) par('A confirmar', CONFERIR[c] ?? c);
   }
-  if (item.observacao) linhas.push(li('Observação', item.observacao));
-  if (item.latitude != null) linhas.push(li('Local', el('a', { href: `https://www.openstreetmap.org/?mlat=${item.latitude}&mlon=${item.longitude}#map=15/${item.latitude}/${item.longitude}`, rel: 'noopener' }, `${num(item.latitude, 4)}, ${num(item.longitude, 4)}`)));
-  return el('div', { class: 'cartao' }, el('p', { class: 'titulo-cartao' }, barragem ? 'Sobre esta barragem' : 'Sobre esta estação'), el('ul', { class: 'info' }, linhas));
+  if (item.observacao) par('Observação', item.observacao);
+  if (item.latitude != null) par('Local', el('a', { href: `https://www.openstreetmap.org/?mlat=${item.latitude}&mlon=${item.longitude}#map=15/${item.latitude}/${item.longitude}`, rel: 'noopener' }, 'ver no OpenStreetMap'));
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-sobre' }, el('h2', { id: 'titulo-sobre' }, barragem ? 'Sobre esta barragem' : 'Sobre esta estação'), el('dl', { class: 'ficha' }, linhas));
 }
 
-function cartaoMapa() {
-  const caixa = el('div', { class: 'mapa mapa-pequeno', id: 'mapa-estacao' });
-  return el('div', { class: 'cartao' }, el('p', { class: 'titulo-cartao' }, 'No mapa'), caixa);
+function secaoAvisos() {
+  const lista = (dados.avisos ?? []).filter((a) => a.estacao_id === id);
+  if (!lista.length) return null;
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-avisos' }, el('h2', { id: 'titulo-avisos' }, 'Avisos das últimas 24 horas'), listaAvisos(lista, '', { porBarragem: false }));
+}
+
+function secaoMapa() {
+  return el('section', { class: 'secao', 'aria-labelledby': 'titulo-mapa' }, el('h2', { id: 'titulo-mapa' }, 'No mapa'), el('div', { class: 'mapa mapa-pequeno', id: 'mapa-estacao' }));
 }
 
 function desenhar() {
   if (!item) {
-    $('#conteudo').replaceChildren(el('p', { class: 'vazio' }, 'Estação não encontrada. ', el('a', { href: '/' }, 'Ver todas')));
+    $('#conteudo').replaceChildren(el('h1', {}, 'Estação não encontrada'), el('p', {}, el('a', { href: '/' }, 'Ver todas as estações')));
     return;
   }
-  document.title = `${item.nome}: ${barragem ? (item.ocupacao_pct != null ? `${num(item.ocupacao_pct, 1)}%` : '—') : item.nivel != null ? `${num(item.nivel)} m` : 'sem leitura'} · Nível Rio`;
-  $('#conteudo').replaceChildren(
+  document.title = `${item.nome}: ${barragem ? (item.ocupacao_pct != null ? `${num(item.ocupacao_pct, 0)}% cheia` : 'sem leitura') : item.nivel != null ? `${num(item.nivel)} m` : 'sem leitura'} · Nível Rio`;
+  $('#dc').classList.toggle('grave', !barragem && gravidade(item) >= 2);
+  $('#conteudo').replaceChildren(...[
     cabeca(),
-    el('div', { class: 'cartoes-estacao' },
-      el('div', { class: 'coluna' }, cartaoGrafico(), cartaoMapa()),
-      el('div', { class: 'coluna' }, cartaoAvisos(), cartaoComportas(), cartaoMesmoRio(), cartaoMesmaCidade(), cartaoSobre())));
+    el('div', { class: 'estacao-topo' }, agora(), secaoGrafico()),
+    secaoMarcas(),
+    el('div', { class: 'colunas' }, ...[secaoMesmoRio(), secaoMesmaCidade(), secaoAvisos(), secaoSobre(), secaoMapa()].filter(Boolean)),
+  ].filter(Boolean));
   desenharGrafico();
   mapaCriado = false;
   observarMapa();
-  atualizarIdades();
+  atualizarTopo();
 }
 
 // O mapa só carrega quando aparece na tela (a biblioteca é pesada).
@@ -234,13 +250,12 @@ function observarMapa() {
   obs.observe(caixa);
 }
 
-function atualizarIdades() {
-  document.querySelectorAll('.idade').forEach(pintarIdade);
+function atualizarTopo() {
   if (!dados) return;
-  const min = (Date.now() - Date.parse(dados.gerado_em)) / 60_000;
   const a = $('#atualizado');
-  a.textContent = `Atualizado ${idadeTexto(min * 60)}`;
+  const min = (Date.now() - Date.parse(dados.gerado_em)) / 60_000;
   a.classList.toggle('velho', min > 20);
+  a.textContent = min > 20 ? `Sem atualização desde ${horaCurta(dados.gerado_em)}` : `Atualizado às ${horaCurta(dados.gerado_em)}`;
 }
 
 async function carregar(primeiraVez = false) {
@@ -254,27 +269,13 @@ async function carregar(primeiraVez = false) {
   achar();
   if (primeiraVez || !item) desenhar();
   else {
-    // Atualização: refaz a cabeça e a coluna lateral; o gráfico só no período de 24 h.
-    const novaCabeca = cabeca();
-    $('.cabeca-estacao').replaceWith(novaCabeca);
-    const colunas = document.querySelectorAll('.coluna');
-    colunas[1]?.replaceChildren(...[cartaoAvisos(), cartaoComportas(), cartaoMesmoRio(), cartaoMesmaCidade(), cartaoSobre()].filter(Boolean));
+    $('.bloco-cidade')?.replaceWith(agora());
     if (horas <= 72) desenharGrafico();
-    atualizarIdades();
+    atualizarTopo();
   }
 }
 
-// Início.
-$('#marca').replaceWith(marca());
-const botao = $('#partilhar');
-botao.hidden = false;
-botao.addEventListener('click', async () => {
-  const url = location.href.split('#')[0];
-  try {
-    if (navigator.share) await navigator.share({ title: document.title, url });
-    else { await navigator.clipboard.writeText(url); botao.textContent = 'Link copiado'; setTimeout(() => (botao.textContent = 'Compartilhar'), 2500); }
-  } catch { /* cancelado */ }
-});
+$('#marca').replaceWith(el('a', { class: 'marca', href: '/', 'aria-label': 'Nível Rio, página inicial' }, icone('marca'), 'Nível Rio'));
 await carregar(true);
 setInterval(() => { if (document.visibilityState === 'visible') carregar(); }, 5 * 60_000);
-setInterval(atualizarIdades, 30_000);
+setInterval(atualizarTopo, 30_000);

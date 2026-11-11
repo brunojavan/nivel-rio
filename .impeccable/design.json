@@ -1,0 +1,929 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T20:21:50.648Z",
+  "title": "Design System: Nível Rio",
+  "extensions": {
+    "colorMeta": {
+      "placa": {
+        "role": "primary",
+        "displayName": "Azul da placa",
+        "canonical": "#1C3F8C",
+        "tonalRamp": [
+          "#101A2F",
+          "#132448",
+          "#162E61",
+          "#1A3879",
+          "#3E5C9D",
+          "#778CBA",
+          "#B0BCD7",
+          "#E4E8F1"
+        ],
+        "theme": "light"
+      },
+      "placa-escura": {
+        "role": "primary",
+        "displayName": "Azul fundo da placa",
+        "canonical": "#142E66",
+        "tonalRamp": [
+          "#0E1626",
+          "#101C37",
+          "#112348",
+          "#132959",
+          "#374D7D",
+          "#7282A3",
+          "#ADB6C9",
+          "#E3E6ED"
+        ],
+        "theme": "light"
+      },
+      "agua": {
+        "role": "primary",
+        "displayName": "Azul da água",
+        "canonical": "#1C3F8C",
+        "tonalRamp": [
+          "#101A2F",
+          "#132448",
+          "#162E61",
+          "#1A3879",
+          "#3E5C9D",
+          "#778CBA",
+          "#B0BCD7",
+          "#E4E8F1"
+        ],
+        "theme": "light"
+      },
+      "normal": {
+        "role": "secondary",
+        "displayName": "Verde normal",
+        "canonical": "#2E7D4F",
+        "tonalRamp": [
+          "#152A20",
+          "#1B402C",
+          "#225639",
+          "#296C46",
+          "#4D9169",
+          "#82B195",
+          "#B6D2C1",
+          "#E6EFEA"
+        ],
+        "theme": "light"
+      },
+      "atencao": {
+        "role": "secondary",
+        "displayName": "Âmbar atenção",
+        "canonical": "#C98A00",
+        "tonalRamp": [
+          "#3B2D0C",
+          "#614609",
+          "#875F06",
+          "#AD7702",
+          "#D19C26",
+          "#DFB966",
+          "#ECD6A6",
+          "#F9F1E0"
+        ],
+        "theme": "light"
+      },
+      "alerta": {
+        "role": "secondary",
+        "displayName": "Laranja alerta",
+        "canonical": "#DD5A12",
+        "tonalRamp": [
+          "#402111",
+          "#6A3011",
+          "#943F11",
+          "#BE4F12",
+          "#E27336",
+          "#EB9C71",
+          "#F3C5AC",
+          "#FBEBE3"
+        ],
+        "theme": "light"
+      },
+      "emergencia": {
+        "role": "secondary",
+        "displayName": "Vermelho emergência",
+        "canonical": "#C8231B",
+        "tonalRamp": [
+          "#3B1313",
+          "#611715",
+          "#861C17",
+          "#AC2019",
+          "#D0443D",
+          "#DE7B76",
+          "#ECB2AF",
+          "#F8E5E4"
+        ],
+        "theme": "light"
+      },
+      "parada": {
+        "role": "secondary",
+        "displayName": "Cinza parada",
+        "canonical": "#6B7378",
+        "tonalRamp": [
+          "#24272A",
+          "#373B3F",
+          "#4A5054",
+          "#5D6468",
+          "#81888C",
+          "#A6ABAE",
+          "#CBCED0",
+          "#EDEEEF"
+        ],
+        "theme": "light"
+      },
+      "normal-txt": {
+        "role": "secondary",
+        "displayName": "Verde normal (texto)",
+        "canonical": "#1E5E39",
+        "tonalRamp": [
+          "#11221A",
+          "#143222",
+          "#18422B",
+          "#1B5233",
+          "#407657",
+          "#789E88",
+          "#B0C7BA",
+          "#E4ECE7"
+        ],
+        "theme": "light"
+      },
+      "atencao-txt": {
+        "role": "secondary",
+        "displayName": "Âmbar atenção (texto)",
+        "canonical": "#6E4D00",
+        "tonalRamp": [
+          "#251E0C",
+          "#382A09",
+          "#4C3706",
+          "#5F4402",
+          "#846826",
+          "#A89466",
+          "#CCC1A6",
+          "#EEEAE0"
+        ],
+        "theme": "light"
+      },
+      "alerta-txt": {
+        "role": "secondary",
+        "displayName": "Laranja alerta (texto)",
+        "canonical": "#8F3606",
+        "tonalRamp": [
+          "#2D180E",
+          "#47200C",
+          "#61280A",
+          "#7B3008",
+          "#A0542B",
+          "#BC866A",
+          "#D8B9A8",
+          "#F2E7E1"
+        ],
+        "theme": "light"
+      },
+      "emergencia-txt": {
+        "role": "secondary",
+        "displayName": "Vermelho emergência (texto)",
+        "canonical": "#971712",
+        "tonalRamp": [
+          "#2F1011",
+          "#4B1211",
+          "#661411",
+          "#821612",
+          "#A73A36",
+          "#C17471",
+          "#DBAEAC",
+          "#F3E3E3"
+        ],
+        "theme": "light"
+      },
+      "reboco": {
+        "role": "neutral",
+        "displayName": "Reboco",
+        "canonical": "#CFD4D6",
+        "tonalRamp": [
+          "#3D4042",
+          "#646769",
+          "#8B8F91",
+          "#B2B6B8",
+          "#D6DADC",
+          "#E2E5E6",
+          "#EEF0F1",
+          "#F9FAFA"
+        ],
+        "theme": "light"
+      },
+      "reboco-claro": {
+        "role": "neutral",
+        "displayName": "Reboco claro",
+        "canonical": "#DCE0E1",
+        "tonalRamp": [
+          "#404344",
+          "#6A6C6E",
+          "#939798",
+          "#BDC1C2",
+          "#E1E5E6",
+          "#EAECED",
+          "#F3F4F5",
+          "#FBFBFB"
+        ],
+        "theme": "light"
+      },
+      "reboco-fundo": {
+        "role": "neutral",
+        "displayName": "Reboco de fundo",
+        "canonical": "#D8DCDE",
+        "tonalRamp": [
+          "#3F4244",
+          "#686B6D",
+          "#919496",
+          "#B9BDBF",
+          "#DEE1E3",
+          "#E8EAEB",
+          "#F1F3F3",
+          "#FAFBFB"
+        ],
+        "theme": "light"
+      },
+      "reboco-escuro": {
+        "role": "neutral",
+        "displayName": "Reboco escuro",
+        "canonical": "#B9C0C3",
+        "tonalRamp": [
+          "#373B3D",
+          "#5A5E61",
+          "#7C8284",
+          "#9FA5A8",
+          "#C4C9CC",
+          "#D5D9DB",
+          "#E7E9EA",
+          "#F7F7F8"
+        ],
+        "theme": "light"
+      },
+      "tinta": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#1D2327",
+        "tonalRamp": [
+          "#101316",
+          "#14171A",
+          "#171C1F",
+          "#1A2024",
+          "#3F4447",
+          "#777B7D",
+          "#B0B2B3",
+          "#E4E5E5"
+        ],
+        "theme": "light"
+      },
+      "tinta-2": {
+        "role": "neutral",
+        "displayName": "Tinta clara",
+        "canonical": "#3A4348",
+        "tonalRamp": [
+          "#181B1E",
+          "#212629",
+          "#2A3034",
+          "#333B40",
+          "#585F63",
+          "#898E91",
+          "#BABDBF",
+          "#E7E8E9"
+        ],
+        "theme": "light"
+      },
+      "fio": {
+        "role": "neutral",
+        "displayName": "Fio",
+        "canonical": "rgba(29, 35, 39, .3)",
+        "theme": "light"
+      },
+      "branco": {
+        "role": "neutral",
+        "displayName": "Branco",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#494A4C",
+          "#797A7C",
+          "#AAABAB",
+          "#DBDBDB",
+          "#FFFFFF",
+          "#FFFFFF",
+          "#FFFFFF",
+          "#FFFFFF"
+        ],
+        "theme": "light"
+      },
+      "placa-noite": {
+        "role": "primary",
+        "displayName": "Azul da placa (tema escuro)",
+        "canonical": "#2D5BC0",
+        "tonalRamp": [
+          "#14213C",
+          "#1B315F",
+          "#214082",
+          "#284FA6",
+          "#4D74C9",
+          "#819DD9",
+          "#B6C6E9",
+          "#E6EBF7"
+        ],
+        "theme": "dark"
+      },
+      "placa-escura-noite": {
+        "role": "primary",
+        "displayName": "Azul fundo da placa (tema escuro)",
+        "canonical": "#23489A",
+        "tonalRamp": [
+          "#121D33",
+          "#16284E",
+          "#1B346A",
+          "#203F85",
+          "#4463A9",
+          "#7B91C2",
+          "#B2BFDC",
+          "#E5E9F3"
+        ],
+        "theme": "dark"
+      },
+      "agua-noite": {
+        "role": "primary",
+        "displayName": "Azul da água (tema escuro)",
+        "canonical": "#2D5BC0",
+        "tonalRamp": [
+          "#14213C",
+          "#1B315F",
+          "#214082",
+          "#284FA6",
+          "#4D74C9",
+          "#819DD9",
+          "#B6C6E9",
+          "#E6EBF7"
+        ],
+        "theme": "dark"
+      },
+      "link-noite": {
+        "role": "primary",
+        "displayName": "Link à noite",
+        "canonical": "#9DB8F2",
+        "tonalRamp": [
+          "#303949",
+          "#4D5A76",
+          "#6A7DA3",
+          "#879FD0",
+          "#ACC3F4",
+          "#C4D4F7",
+          "#DDE6FA",
+          "#F3F6FD"
+        ],
+        "theme": "dark"
+      },
+      "normal-noite": {
+        "role": "secondary",
+        "displayName": "Verde normal (tema escuro)",
+        "canonical": "#4DB37A",
+        "tonalRamp": [
+          "#1C372B",
+          "#295840",
+          "#367955",
+          "#439A6A",
+          "#68BE8E",
+          "#94D1AF",
+          "#C1E4D0",
+          "#EAF6EF"
+        ],
+        "theme": "dark"
+      },
+      "atencao-noite": {
+        "role": "secondary",
+        "displayName": "Âmbar atenção (tema escuro)",
+        "canonical": "#E2B13C",
+        "tonalRamp": [
+          "#42371B",
+          "#6C5724",
+          "#97782D",
+          "#C29935",
+          "#E6BD59",
+          "#EED08A",
+          "#F5E4BB",
+          "#FCF6E8"
+        ],
+        "theme": "dark"
+      },
+      "alerta-noite": {
+        "role": "secondary",
+        "displayName": "Laranja alerta (tema escuro)",
+        "canonical": "#F38A4E",
+        "tonalRamp": [
+          "#462D20",
+          "#74462C",
+          "#A25F38",
+          "#D07745",
+          "#F59C69",
+          "#F8B995",
+          "#FBD6C1",
+          "#FEF1EA"
+        ],
+        "theme": "dark"
+      },
+      "emergencia-noite": {
+        "role": "secondary",
+        "displayName": "Vermelho emergência (tema escuro)",
+        "canonical": "#F0675C",
+        "tonalRamp": [
+          "#452423",
+          "#733632",
+          "#A04841",
+          "#CE5A51",
+          "#F27E74",
+          "#F6A49D",
+          "#FACAC6",
+          "#FDEDEB"
+        ],
+        "theme": "dark"
+      },
+      "parada-noite": {
+        "role": "secondary",
+        "displayName": "Cinza parada (tema escuro)",
+        "canonical": "#8B9499",
+        "tonalRamp": [
+          "#2C3032",
+          "#454A4E",
+          "#5F6569",
+          "#788084",
+          "#9CA4A8",
+          "#B9BFC2",
+          "#D6DADB",
+          "#F1F2F3"
+        ],
+        "theme": "dark"
+      },
+      "normal-txt-noite": {
+        "role": "secondary",
+        "displayName": "Verde normal (texto) (tema escuro)",
+        "canonical": "#6FCB96",
+        "tonalRamp": [
+          "#253D32",
+          "#39634C",
+          "#4C8967",
+          "#60AF82",
+          "#85D3A6",
+          "#A9E0C0",
+          "#CDEDDA",
+          "#EEF9F2"
+        ],
+        "theme": "dark"
+      },
+      "atencao-txt-noite": {
+        "role": "secondary",
+        "displayName": "Âmbar atenção (texto) (tema escuro)",
+        "canonical": "#EBC15C",
+        "tonalRamp": [
+          "#443B23",
+          "#705F32",
+          "#9D8241",
+          "#CAA651",
+          "#EECA74",
+          "#F3DA9D",
+          "#F8E9C6",
+          "#FDF8EB"
+        ],
+        "theme": "dark"
+      },
+      "alerta-txt-noite": {
+        "role": "secondary",
+        "displayName": "Laranja alerta (texto) (tema escuro)",
+        "canonical": "#F79D69",
+        "tonalRamp": [
+          "#473226",
+          "#764E38",
+          "#A56B4A",
+          "#D4885C",
+          "#F8AC80",
+          "#FAC4A5",
+          "#FCDDCB",
+          "#FEF3ED"
+        ],
+        "theme": "dark"
+      },
+      "emergencia-txt-noite": {
+        "role": "secondary",
+        "displayName": "Vermelho emergência (texto) (tema escuro)",
+        "canonical": "#F58A81",
+        "tonalRamp": [
+          "#462D2C",
+          "#754643",
+          "#A35F59",
+          "#D27770",
+          "#F79C94",
+          "#F9B9B3",
+          "#FCD6D3",
+          "#FEF1F0"
+        ],
+        "theme": "dark"
+      },
+      "reboco-noite": {
+        "role": "neutral",
+        "displayName": "Reboco (tema escuro)",
+        "canonical": "#23292D",
+        "tonalRamp": [
+          "#121517",
+          "#161A1D",
+          "#1B2023",
+          "#202529",
+          "#44494D",
+          "#7B7F81",
+          "#B2B4B6",
+          "#E5E5E6"
+        ],
+        "theme": "dark"
+      },
+      "reboco-claro-noite": {
+        "role": "neutral",
+        "displayName": "Reboco claro (tema escuro)",
+        "canonical": "#2B3237",
+        "tonalRamp": [
+          "#14171A",
+          "#1A1E22",
+          "#202529",
+          "#262D31",
+          "#4B5155",
+          "#808487",
+          "#B5B7B9",
+          "#E6E6E7"
+        ],
+        "theme": "dark"
+      },
+      "reboco-fundo-noite": {
+        "role": "neutral",
+        "displayName": "Reboco de fundo (tema escuro)",
+        "canonical": "#283035",
+        "tonalRamp": [
+          "#131719",
+          "#191D21",
+          "#1E2428",
+          "#242B2F",
+          "#484F53",
+          "#7E8386",
+          "#B4B7B8",
+          "#E5E6E7"
+        ],
+        "theme": "dark"
+      },
+      "reboco-escuro-noite": {
+        "role": "neutral",
+        "displayName": "Reboco escuro (tema escuro)",
+        "canonical": "#3A4349",
+        "tonalRamp": [
+          "#181B1E",
+          "#21262A",
+          "#2A3035",
+          "#333B40",
+          "#585F64",
+          "#898E92",
+          "#BABDBF",
+          "#E7E8E9"
+        ],
+        "theme": "dark"
+      },
+      "tinta-noite": {
+        "role": "neutral",
+        "displayName": "Tinta (tema escuro)",
+        "canonical": "#E4E8EA",
+        "tonalRamp": [
+          "#424547",
+          "#6D7072",
+          "#989C9E",
+          "#C4C7C9",
+          "#E8EBED",
+          "#EFF1F2",
+          "#F6F7F8",
+          "#FCFCFC"
+        ],
+        "theme": "dark"
+      },
+      "tinta-2-noite": {
+        "role": "neutral",
+        "displayName": "Tinta clara (tema escuro)",
+        "canonical": "#B3BCC1",
+        "tonalRamp": [
+          "#363A3C",
+          "#575C60",
+          "#797F83",
+          "#9AA2A6",
+          "#BEC6CA",
+          "#D1D7DA",
+          "#E4E8E9",
+          "#F6F7F8"
+        ],
+        "theme": "dark"
+      },
+      "fio-noite": {
+        "role": "neutral",
+        "displayName": "Fio (tema escuro)",
+        "canonical": "rgba(228, 232, 234, .25)",
+        "theme": "dark"
+      }
+    },
+    "typographyMeta": {
+      "numero": {
+        "displayName": "Número",
+        "purpose": "Só o número da placa; 2,75rem em telas de até 380px."
+      },
+      "titulo-estacao": {
+        "displayName": "Título de estação",
+        "purpose": "h1 da página da estação."
+      },
+      "titulo": {
+        "displayName": "Título",
+        "purpose": "Títulos de seção, de cidade e do mapa."
+      },
+      "frase": {
+        "displayName": "Frase",
+        "purpose": "A frase da bacia no topo da tela inicial."
+      },
+      "sub": {
+        "displayName": "Sub",
+        "purpose": "h3 dentro de seção e o resumo \"Sobre os dados\"."
+      },
+      "corpo": {
+        "displayName": "Corpo",
+        "purpose": "Texto corrido, até 60–68ch."
+      },
+      "legenda": {
+        "displayName": "Legenda",
+        "purpose": "Rodapé, nota de fonte, subtítulo de linha, explicação."
+      },
+      "marca-parede": {
+        "displayName": "Marca da parede",
+        "purpose": "Nomes das cotas e anos pintados na parede."
+      }
+    },
+    "fonts": [
+      {
+        "family": "Overpass",
+        "src": "/fontes/overpass-latin.woff2",
+        "weights": "100 900",
+        "license": "OFL (public/fontes/Overpass-OFL.txt)",
+        "display": "swap"
+      }
+    ],
+    "shadows": [
+      {
+        "name": "placa-esmaltada",
+        "value": "inset 0 0 0 3px var(--placa), inset 0 0 0 5px var(--branco), 0 2px 3px rgba(20, 26, 30, .35)",
+        "purpose": "Só a placa: filete branco do esmalte e a sombra de um objeto preso na parede."
+      }
+    ],
+    "textures": [
+      {
+        "name": "grao",
+        "value": "SVG feTurbulence fractalNoise, baseFrequency .85, tile 180px",
+        "purpose": "Grão do reboco em toda a página, na parede e no gráfico."
+      },
+      {
+        "name": "manchas",
+        "value": "SVG feTurbulence fractalNoise, baseFrequency .011, tile 320px",
+        "purpose": "Manchas de umidade na parede e no gráfico."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sobe",
+        "value": "1.1s cubic-bezier(.16, 1, .3, 1), scaleY 0 → 1 a partir de baixo",
+        "purpose": "A água de agora sobe na parede ao abrir. Único movimento; desligado com prefers-reduced-motion: reduce."
+      }
+    ],
+    "focus": {
+      "value": "outline: 3px solid var(--placa); outline-offset: 2px",
+      "purpose": "Foco de teclado em todos os elementos."
+    },
+    "breakpoints": [
+      {
+        "name": "placa-compacta",
+        "value": "max-width: 380px"
+      },
+      {
+        "name": "ordem-compacta",
+        "value": "max-width: 420px"
+      },
+      {
+        "name": "mapa-estreito",
+        "value": "container < 520px (JS)"
+      },
+      {
+        "name": "parede-larga",
+        "value": "560px"
+      },
+      {
+        "name": "duas-colunas-listas",
+        "value": "900px"
+      },
+      {
+        "name": "primeira-tela-dupla",
+        "value": "1000px"
+      }
+    ],
+    "theme": {
+      "dark": "prefers-color-scheme: dark troca os tokens pelos de sufixo -noite; links usam link-noite."
+    },
+    "mapa": {
+      "basemap": "OpenFreeMap recolorido: terra reboco-fundo, água #B9C6D6 (#2A3A52 à noite), ruas #E4E7E8 (#323A40), verde #CBD3CC (#28302F), texto tinta-2.",
+      "grupoItajai": "Abaixo do zoom 10, os pontos de Itajaí viram um no centroide deles.",
+      "prioridadeNomes": [
+        "cidade do morador",
+        "atenção ou pior",
+        "Blumenau, Itajaí, Brusque, Rio do Sul",
+        "barragens",
+        "o resto"
+      ],
+      "celular": "Só os níveis de cima ganham nome; toque abre painel no pé do mapa."
+    },
+    "finish": {
+      "verdict": "A revisão de acabamento rodou três rodadas; todas as correções materiais foram aplicadas e confirmadas.",
+      "ceilingNotes": [
+        "O tema escuro lembra menos o mundo de reboco.",
+        "A lista na ordem do rio é longa e plana.",
+        "As marcas pintadas não têm variação de mão."
+      ]
+    },
+    "rasterProvenance": [
+      {
+        "file": "public/favicon.ico",
+        "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. Três PNG dentro: 16, 32 e 48 px."
+      },
+      {
+        "file": "public/favicon.png",
+        "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. 16 × 16."
+      },
+      {
+        "file": "public/favicon@2x.png",
+        "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. 32 × 32."
+      },
+      {
+        "file": "public/favicon@3x.png",
+        "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. 48 × 48."
+      },
+      {
+        "file": "public/apple-touch-icon.png",
+        "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. 180 × 180, marca a 64%, sem canto; apple-touch-icon das três páginas."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão",
+      "kind": "button",
+      "refersTo": "botao",
+      "description": "Retângulo de tinta para abas de período e de ordem, Compartilhar e Fechar.",
+      "html": "<div style=\"display:flex;gap:8px\"><button class=\"ds-botao\" aria-pressed=\"true\">24 horas</button><button class=\"ds-botao\">3 dias</button><button class=\"ds-botao\">7 dias</button></div>",
+      "css": ".ds-botao{font:650 1rem/1.45 Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327);background:transparent;border:2px solid var(--tinta,#1D2327);border-radius:4px;padding:9px 14px;min-height:44px;cursor:pointer}.ds-botao:hover{background:var(--reboco-claro,#DCE0E1)}.ds-botao[aria-pressed=\"true\"]{background:var(--tinta,#1D2327);color:var(--reboco,#CFD4D6)}.ds-botao:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}"
+    },
+    {
+      "name": "Link de ação",
+      "kind": "button",
+      "refersTo": "botao",
+      "description": "Ação em texto (Trocar cidade, Mais N pontos), azul da placa sublinhado, 44px de altura.",
+      "html": "<button class=\"ds-link\">Mais 11 pontos em Itajaí</button>",
+      "css": ".ds-link{font:650 1.0625rem/1.45 Overpass,system-ui,sans-serif;background:none;border:0;padding:0;color:var(--placa,#1C3F8C);text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px;min-height:44px;cursor:pointer}.ds-link:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}"
+    },
+    {
+      "name": "Seletor de cidade",
+      "kind": "input",
+      "refersTo": "seletor",
+      "description": "Campo nativo para escolher a cidade na primeira visita.",
+      "html": "<select class=\"ds-seletor\"><option>Itajaí</option><option>Blumenau</option></select>",
+      "css": ".ds-seletor{font:400 1.0625rem Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327);background:var(--reboco-claro,#DCE0E1);border:2px solid var(--tinta,#1D2327);border-radius:4px;padding:9px 12px;min-height:44px;min-width:220px}.ds-seletor:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}"
+    },
+    {
+      "name": "Topo e linha da Defesa Civil",
+      "kind": "nav",
+      "description": "Marca, hora da atualização e a linha fixa com 199 e 40199.",
+      "html": "<header class=\"ds-topo\"><a class=\"ds-marca\" href=\"#\"><svg viewBox=\"0 0 32 32\" width=\"30\" height=\"30\" aria-hidden=\"true\"><path d=\"M9 5h14l-7 10z\" fill=\"currentColor\"/><path d=\"M3 18.5h26M8 23.5h16M12.5 28h7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\"/></svg>Nível Rio</a><span>Atualizado às 17h03</span></header><p class=\"ds-dc\">Este site não substitui a Defesa Civil. <span>Emergência: <a class=\"ds-tel\" href=\"tel:199\">199</a></span> <span>Alertas por SMS: mande seu CEP para <a href=\"sms:40199\">40199</a></span></p>",
+      "css": ".ds-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0 10px;border-bottom:2px solid var(--tinta,#1D2327);font:400 .9375rem Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327)}.ds-marca{display:inline-flex;align-items:center;gap:9px;color:inherit;text-decoration:none;font-weight:800;font-size:1.375rem;letter-spacing:-.015em}.ds-dc{font:400 .9375rem/1.45 Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327);padding:8px 0 9px;border-bottom:1px solid var(--fio,rgba(29,35,39,.3));display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline;margin:0}.ds-dc a{color:inherit;font-weight:800}.ds-dc .ds-tel{font-size:1.25rem}.ds-marca:focus-visible,.ds-dc a:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}"
+    },
+    {
+      "name": "Placa esmaltada",
+      "kind": "custom",
+      "refersTo": "placa",
+      "description": "O número principal de um ponto, em azul esmaltado com filete branco. Uma por bloco de cidade.",
+      "html": "<div class=\"ds-placa\"><p class=\"ds-est\">Santa Regina (Volta de Cima)</p><p class=\"ds-valor\">2,68<small>m</small></p></div><p class=\"ds-tend\"><svg class=\"ds-icone\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 20V5M5.5 11.5 12 5l6.5 6.5\"/></svg>Subindo 4 cm por hora</p>",
+      "css": ".ds-placa{background:var(--placa,#1C3F8C);color:#fff;border-radius:7px;padding:12px 14px 10px;box-shadow:inset 0 0 0 3px var(--placa,#1C3F8C),inset 0 0 0 5px #fff,0 2px 3px rgba(20,26,30,.35);font-family:Overpass,system-ui,sans-serif;max-width:300px}.ds-placa p{margin:0}.ds-est{font-size:.9375rem;font-weight:650;line-height:1.2}.ds-valor{font-size:3.25rem;font-weight:800;line-height:1;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}.ds-valor small{font-size:1.375rem;font-weight:650;letter-spacing:0;margin-left:3px}.ds-tend{display:flex;gap:7px;font:800 1.0625rem/1.3 Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327);margin:12px 0 0}.ds-icone{width:20px;height:20px;flex:none;margin-top:1px}"
+    },
+    {
+      "name": "Parede",
+      "kind": "custom",
+      "description": "A régua da cidade no reboco: cotas pintadas, marcas de cheias com fonte e a água de agora, que sobe uma vez.",
+      "html": "<figure class=\"ds-parede\" role=\"img\" aria-label=\"A água está em 2,68 metros. Cotas oficiais: atenção 3,00, alerta 4,00, emergência 5,00 metros.\"><div class=\"ds-regua\"><span style=\"bottom:58px\">1</span><span style=\"bottom:116px\">2</span><span style=\"bottom:174px\">3</span><span style=\"bottom:232px\">4</span><span style=\"bottom:290px\">5</span></div><div class=\"ds-cota\" style=\"--c:#C8231B;--ct:#971712;bottom:290px\"><b>emergência</b> 5,00 m</div><div class=\"ds-cota\" style=\"--c:#DD5A12;--ct:#8F3606;bottom:232px\"><b>alerta</b> 4,00 m</div><div class=\"ds-cota\" style=\"--c:#C98A00;--ct:#6E4D00;bottom:174px\"><b>atenção</b> 3,00 m</div><div class=\"ds-agua\" style=\"height:155px\"><span>Agora 2,68 m</span></div></figure>",
+      "css": ".ds-parede{position:relative;width:190px;height:360px;margin:0;overflow:hidden;background:var(--reboco-fundo,#D8DCDE);border:1px solid var(--fio,rgba(29,35,39,.3));border-bottom:0;font-family:Overpass,system-ui,sans-serif}.ds-regua{position:absolute;inset:0 auto 0 0;width:22px;border-right:1px solid var(--fio,rgba(29,35,39,.3))}.ds-regua span{position:absolute;left:0;width:22px;text-align:center;font-size:.6875rem;font-weight:700;color:var(--tinta-2,#3A4348);transform:translateY(50%)}.ds-cota{position:absolute;left:22px;right:0;border-bottom:4px solid var(--c);padding:0 5px 2px;font-size:.75rem;line-height:1.2;color:var(--ct);white-space:nowrap}.ds-cota b{font-weight:800}.ds-historica{position:absolute;left:22px;right:0;display:flex;gap:4px;align-items:center;font-size:.6875rem;color:var(--tinta-2,#3A4348);white-space:nowrap}.ds-historica::before{content:\"\";width:18px;height:4px;background:var(--tinta-2,#3A4348);transform:rotate(-.8deg)}.ds-agua{position:absolute;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--agua,#1C3F8C) 86%,transparent);border-top:4px solid #2E7D4F;transform-origin:bottom;animation:ds-sobe 1.1s cubic-bezier(.16,1,.3,1) both}.ds-agua span{position:absolute;left:28px;top:4px;color:#fff;font-weight:800;font-size:.875rem}@keyframes ds-sobe{from{transform:scaleY(0)}}@media (prefers-reduced-motion:reduce){.ds-agua{animation:none}}"
+    },
+    {
+      "name": "Linha de estação",
+      "kind": "custom",
+      "refersTo": "linha",
+      "description": "Um ponto numa lista: mini parede, nome, nível e estado em palavra com sentido. Sem cartão.",
+      "html": "<a class=\"ds-linha\" href=\"#\"><span class=\"ds-mini\"><i style=\"height:62%\"></i><s style=\"bottom:70%;border-color:#C98A00\"></s></span><span class=\"ds-nome\">Blumenau</span><span class=\"ds-nivel\">3,66<small> m</small></span><span class=\"ds-pe\"><span>Itajaí-Açu</span><span><span class=\"ds-sw\"></span><b>Normal</b>, subindo 3 cm/h</span></span></a>",
+      "css": ".ds-linha{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--fio,rgba(29,35,39,.3));color:var(--tinta,#1D2327);text-decoration:none;font:400 1.0625rem/1.45 Overpass,system-ui,sans-serif;max-width:420px}.ds-linha:hover .ds-nome{text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:3px}.ds-linha:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}.ds-mini{grid-row:span 2;width:14px;height:40px;position:relative;background:var(--reboco-escuro,#B9C0C3);overflow:hidden}.ds-mini i{position:absolute;left:0;right:0;bottom:0;background:var(--agua,#1C3F8C)}.ds-mini s{position:absolute;left:0;right:0;border-top:2px solid}.ds-nome{font-weight:700}.ds-nivel{text-align:right;font-weight:800;font-size:1.1875rem;font-variant-numeric:tabular-nums}.ds-nivel small{font-weight:600;font-size:.875rem}.ds-pe{grid-column:2/4;display:flex;justify-content:space-between;gap:0 12px;font-size:.875rem;color:var(--tinta-2,#3A4348)}.ds-pe b{color:var(--normal-txt,#1E5E39);font-weight:800}.ds-sw{display:inline-block;width:.62em;height:.62em;margin-right:.3em;background:var(--normal,#2E7D4F)}"
+    },
+    {
+      "name": "Painel do mapa (celular)",
+      "kind": "card",
+      "refersTo": "painel-mapa",
+      "description": "No celular, o toque num ponto abre este painel no pé do mapa, no lugar do balão.",
+      "html": "<div class=\"ds-painel\"><button class=\"ds-fechar\">Fechar</button><h3>Rio do Sul</h3><p class=\"ds-pv\">7,30 m</p><p class=\"ds-pe2\"><b>Emergência</b> (cota a confirmar), subindo 6 cm/h</p></div>",
+      "css": ".ds-painel{background:var(--reboco-claro,#DCE0E1);border:2px solid var(--tinta,#1D2327);padding:12px 14px;font:400 15px/1.4 Overpass,system-ui,sans-serif;color:var(--tinta,#1D2327);max-width:360px}.ds-painel h3{margin:0;font-size:1.0625rem}.ds-pv{margin:4px 0 0;font-size:1.75rem;font-weight:800;font-variant-numeric:tabular-nums}.ds-pe2{margin:4px 0 0}.ds-pe2 b{color:var(--emergencia-txt,#971712)}.ds-fechar{float:right;font:650 1rem Overpass,system-ui,sans-serif;background:transparent;border:2px solid var(--tinta,#1D2327);border-radius:4px;padding:9px 14px;min-height:44px;cursor:pointer;color:inherit}.ds-fechar:hover{background:var(--reboco,#CFD4D6)}.ds-fechar:focus-visible{outline:3px solid var(--placa,#1C3F8C);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Marcas da enchente",
+    "overview": "Cada cidade tem uma parede de reboco cinza frio. Nela estão pintados a régua em metros, as cotas oficiais (atenção, alerta, emergência) e as marcas que as cheias passadas deixaram, cada uma com o ano. A água de agora sobe nessa parede. Ao lado, uma placa esmaltada azul com letra branca mostra o número. Tudo o mais (o mapa, as listas por cidade e pela ordem do rio, o gráfico da estação) é a mesma parede vista de outro jeito: a mini parede de cada linha, os pontos do mapa pintados com a cor da faixa e o gráfico que estica a parede no tempo.\n\nA página é tinta escura sobre reboco, com textura leve de grão e manchas. Não usa cartões: as seções se separam por linhas de tinta (2px) e as linhas de lista por fios finos. A densidade é de quadro de avisos: números grandes, frases inteiras, uma coluna no celular. O texto explica a situação em vez de dar só o rótulo (\"Normal. Faltam 32 cm para a cota de atenção.\").\n\nEste sistema substitui o site anterior, que a crítica de 11 nov 2026 avaliou com 22/40: 37 cartões iguais com raio de 16px e sombra, degradê decorativo, rótulos em maiúsculas espaçadas, pílulas, anel de progresso, só a fonte do sistema, 20 tamanhos de letra e emoji.",
+    "keyCharacteristics": [
+      "Reboco cinza frio (nunca bege), tinta quase preta, um azul só (placa e água).",
+      "Verde, âmbar, laranja e vermelho reservados para a faixa do rio, sempre com a palavra junto.",
+      "Uma família, Overpass, servida pelo próprio site, numa escala fixa.",
+      "Cantos retos ou quase; nenhuma pílula; sombra só na placa esmaltada.",
+      "Um único movimento com significado: a água sobe na parede."
+    ],
+    "rules": [
+      {
+        "name": "A Regra da Faixa",
+        "body": "Verde, âmbar, laranja e vermelho só dizem o estado do rio. Nenhum botão, ícone, destaque ou gráfico usa essas cores para outra coisa, e nenhuma faixa aparece só como cor: vem sempre com a palavra (quadradinho pintado + \"Atenção\").",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Azul Único",
+        "body": "O azul é a placa e a água. Não vira cor de marca, fundo de seção nem destaque genérico.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra do Contraste",
+        "body": "Todo texto fica em 4,5:1 ou mais nos dois temas; por isso as faixas têm a versão `-txt` e o tema escuro tem link próprio.",
+        "section": "colors"
+      },
+      {
+        "name": "A Regra da Escala Fixa",
+        "body": "Os tamanhos saem dos tokens `--t-*` (13, 17, 20, 24, 30 e 52px) e dos poucos tamanhos de apoio listados acima. Não criar tamanhos novos por componente.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Frase",
+        "body": "Estado se escreve em frase com o número e a distância até a próxima cota, nunca só como rótulo.",
+        "section": "typography"
+      },
+      {
+        "name": "A Regra da Primeira Tela",
+        "body": "No celular de 390px, a frase da bacia e a parede da sua cidade com a placa cabem antes de rolar; em cheia, o caso mais grave entra acima da sua cidade.",
+        "section": "layout"
+      },
+      {
+        "name": "A Regra do Objeto Único",
+        "body": "Só a placa é um objeto sobre a parede; todo o resto é pintado nela.",
+        "section": "elevation"
+      },
+      {
+        "name": "A Regra da Fonte da Marca",
+        "body": "Marca de cheia passada só entra na parede, na lista ou no gráfico com fonte citada e link (hoje as 8 marcas do catálogo têm fonte e endereço). Sem fonte, não pinta.",
+        "section": "data"
+      },
+      {
+        "name": "A Regra da Cota a Confirmar",
+        "body": "As cotas de Rio do Sul ainda não estão confirmadas. Todo estado que depende delas leva \"cota a confirmar\" (frase da bacia, frase de estado, linha da estação, \"(a confirmar)\" no mapa).",
+        "section": "data"
+      },
+      {
+        "name": "A Regra da Maré",
+        "body": "As estações de Itajaí sobem e descem com a maré: o sentido aparece como \"Sobe e desce com a maré, agora subindo\" com o ícone de maré, nunca como seta de subida.",
+        "section": "data"
+      },
+      {
+        "name": "A Regra da Altitude",
+        "body": "Estação que mede altitude da água não tem parede, cota nem mini parede com escala, leva o rótulo \"altitude\" junto do número e nunca é comparada com leituras de régua.",
+        "section": "data"
+      },
+      {
+        "name": "A Regra do Número Velho",
+        "body": "Leitura velha nunca parece atual: todo valor diz quando foi medido; estação sem leitura nova há mais que o dobro do intervalo vira \"parada\" (cinza, nível riscado, sem sentido); \"Atualizado\" fica em vermelho de texto quando a página envelhece; no gráfico, o atraso aparece como tracejado.",
+        "section": "data"
+      }
+    ],
+    "dos": [
+      "**Do** mostrar o nível de uma cidade na parede, com a placa ao lado, sempre que a pergunta for \"como está o rio aqui\".",
+      "**Do** escrever o estado em frase, com a distância até a próxima cota e o sentido.",
+      "**Do** juntar cor de faixa e palavra (quadradinho pintado + nome da faixa).",
+      "**Do** separar seções com linha de tinta de 2px e linhas de lista com fio de 1px.",
+      "**Do** usar os ícones SVG do próprio conjunto, na cor do texto.",
+      "**Do** manter a única animação (a água subindo) e desligá-la com `prefers-reduced-motion`.",
+      "**Do** manter contraste de 4,5:1 ou mais nos dois temas e alvos de toque de 44px."
+    ],
+    "donts": [
+      "**Don't** usar verde, âmbar, laranja ou vermelho para algo que não seja o estado do rio.",
+      "**Don't** usar o azul fora da placa, da água, dos rios e dos links.",
+      "**Don't** pôr rótulo pequeno em maiúsculas espaçadas acima de título (eyebrow).",
+      "**Don't** usar borda lateral colorida para marcar estado.",
+      "**Don't** pôr sparkline decorativo ou gráfico de área sem cotas e régua; gráfico de nível é sempre a parede no tempo.",
+      "**Don't** usar emoji, caractere como ícone ou fonte de ícones; só SVG.",
+      "**Don't** usar cartões com sombra, pílulas, degradês ou anéis de progresso.",
+      "**Don't** criar movimento além da água subindo."
+    ]
+  }
+}

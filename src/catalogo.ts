@@ -20,6 +20,10 @@ export type Estacao = {
   situacao: string;
   conferir: string[];
   observacao?: string;
+  // Estação sob efeito da maré (perto da foz): sobe e desce duas vezes por dia sem ser cheia.
+  mare?: boolean;
+  // Marcas de cheias passadas, só com fonte (nunca valor ilustrativo).
+  marcas?: Array<{ data: string; nivel: number; nota?: string; fonte: string; url: string }>;
 };
 
 export const ESTACOES = (dados as { estacoes: Estacao[] }).estacoes;

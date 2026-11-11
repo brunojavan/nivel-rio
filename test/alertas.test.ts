@@ -75,6 +75,11 @@ describe('avisos: regras', () => {
     expect(foz.avisos).toEqual([]);
   });
 
+  it('estação de altitude não gera aviso de subida rápida (salto de sensor em Rio do Oeste, 11 nov)', () => {
+    const { avisos } = rodar(Array.from({ length: 6 }, () => (t: number) => resumo([estacao(335.32, t, 331.38, { id: 'rio-do-oeste', nome: 'Rio do Oeste', municipio: 'Rio do Oeste', referencia: 'altitude', cotas: null })])));
+    expect(avisos).toEqual([]);
+  });
+
   it('estação atrasada não muda de faixa nem avisa', () => {
     const { avisos } = rodar([
       (t) => resumo([estacao(5.5, t, 5.5)]),

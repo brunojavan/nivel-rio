@@ -116,6 +116,8 @@ async function montarComEstado(db: D1Database): Promise<{ resumo: Record<string,
       h3: ponto(u?.h3 ?? null),
       cotas: cotasPorEstacao.get(e.id) ?? null,
       observacao: e.observacao ?? null,
+      mare: e.mare ?? false,
+      marcas: e.marcas ?? [],
     };
   });
 

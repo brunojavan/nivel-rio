@@ -4,16 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Estação · Nível Rio</title>
-  <meta name="description" content="Nível, tendência e gráficos de uma estação da bacia do Itajaí.">
-  <meta name="theme-color" content="#1769c2">
+  <meta name="description" content="Nível do rio nesta estação da bacia do Itajaí, com as cotas oficiais, as marcas das cheias passadas e o gráfico das últimas horas e dias.">
+  <meta name="theme-color" content="#CFD4D6">
   <meta property="og:title" content="Estação · Nível Rio">
-  <meta property="og:description" content="Nível, tendência e gráficos de uma estação da bacia do Itajaí.">
+  <meta property="og:description" content="Nível do rio nesta estação da bacia do Itajaí, com as cotas oficiais, as marcas das cheias passadas e o gráfico das últimas horas e dias.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
-  <link rel="icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/favicon@3x.png">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/fontes/overpass-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="modulepreload" href="/js/comum.js">
-  <link rel="modulepreload" href="/js/graficos.js">
+  <link rel="modulepreload" href="/js/parede.js">
   <link rel="modulepreload" href="/js/componentes.js">
   <link rel="stylesheet" href="/vendor/uPlot.min.css">
   <link rel="stylesheet" href="/estilo.css">
@@ -28,18 +30,14 @@
 </header>
 
 <main class="largura">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-    <a class="voltar" href="/">← Todas as estações</a>
-    <button type="button" class="partilhar" id="partilhar" hidden>Compartilhar</button>
-  </div>
-
+  <noscript><p class="vazio">Este site precisa de JavaScript ligado para mostrar os níveis. Em emergência, ligue 199.</p></noscript>
+  <p class="dc" id="dc">
+    <span>Este site não substitui a Defesa Civil.</span>
+    <span>Emergência: <a class="tel" href="tel:199">199</a></span>
+    <span>Alertas por SMS: mande seu CEP para <a href="sms:40199">40199</a></span>
+  </p>
   <div id="conteudo"><p class="vazio">Carregando…</p></div>
-
-  <div class="aviso-dc" style="margin-top:24px">
-    <strong>Este site não substitui a Defesa Civil.</strong>
-    <span>Em emergência ligue <a href="tel:199">199</a>. Alertas por SMS: mande o seu CEP para <strong>40199</strong>.</span>
-  </div>
-  <p class="rodape">Dados das Defesas Civis de SC, de Itajaí e de Blumenau. <a href="/">Nível Rio</a> · <a href="/saude">Saúde do coletor</a></p>
+  <p class="rodape">Dados das Defesas Civis de SC, de Itajaí e de Blumenau. <a href="/">Nível Rio</a>. <a href="/saude">Saúde do coletor</a></p>
 </main>
 
 <script type="module" src="/js/estacao.js"></script>

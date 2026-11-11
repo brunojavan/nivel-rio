@@ -14,7 +14,7 @@ Tudo roda na Cloudflare, no plano gratuito:
 
 - **Worker** (`src/`): roda a cada minuto, consulta as fontes, grava as leituras e responde a API em `/api/*`.
 - **D1**: dois bancos SQLite. `nivel-rio` é o definitivo; `nivel-rio-brutos` guarda o que o coletor provisório (passo zero) baixou e as respostas que o coletor não conseguiu entender.
-- **Site** (`public/`): HTML, CSS e JavaScript puros (módulos em `public/js/`), servidos pelo mesmo Worker. Mapa com MapLibre e fundo do OpenFreeMap (gratuito, sem chave); traçado dos rios do OpenStreetMap em `public/mapa/rios.geojson`. Gráfico grande com uPlot; os pequenos são SVG feitos à mão. As bibliotecas ficam copiadas em `public/vendor/`.
+- **Site** (`public/`): HTML, CSS e JavaScript puros (módulos em `public/js/`), servidos pelo mesmo Worker. Visual "Marcas da enchente" (decidido com a skill Impeccable; ver `DESIGN.md`): reboco, placa esmaltada e a parede de cada cidade com a água de agora, as cotas e as cheias passadas. Letra Overpass servida pelo próprio site (`public/fontes/`, licença OFL). Mapa com MapLibre e fundo do OpenFreeMap (gratuito, sem chave); traçado dos rios do OpenStreetMap em `public/mapa/rios.geojson`. Gráfico com uPlot. As bibliotecas ficam copiadas em `public/vendor/`.
 
 Cada push na branch `main` publica a versão nova automaticamente (Workers Builds, ligado no painel da Cloudflare). O comando de publicação é `npm run deploy`, que aplica as migrações dos bancos e publica o Worker.
 
@@ -33,13 +33,15 @@ Cada push na branch `main` publica a versão nova automaticamente (Workers Build
 | `src/importacao.ts` | Importa o que o passo zero guardou (roda sozinho até acabar) |
 | `src/passo-zero.ts` | Download único do histórico do Estado (últimos 90 dias) |
 | `src/consultas/` | Consultas GraphQL do Estado, idênticas às do site deles (não editar) |
-| `catalogo/estacoes.json` | Catálogo de estações: id, rio, município, coordenadas, ordem rio abaixo, códigos em cada fonte |
+| `catalogo/estacoes.json` | Catálogo de estações: id, rio, município, coordenadas, ordem rio abaixo, códigos em cada fonte, estações com maré e marcas de cheias passadas (só com fonte) |
 | `migrations/` | Estrutura do banco definitivo |
 | `migrations-brutos/` | Estrutura do banco de brutos |
 | `amostras/` | Respostas reais das fontes, usadas nos testes |
-| `public/index.html`, `public/js/inicio.js` | Tela inicial: mapa, níveis por cidade ou por região do rio, barragens, chuva e avisos |
+| `public/index.html`, `public/js/inicio.js` | Tela inicial: a frase da bacia, a sua cidade (e a situação mais grave, quando há), o mapa, todas as estações na ordem do rio ou de A a Z, barragens, chuva e avisos |
 | `public/estacao.html`, `public/js/estacao.js` | Página de cada estação e barragem (`/estacao/{id}`) |
+| `public/js/parede.js` | A parede da cidade, a placa e as frases de faixa e de sentido do rio |
 | `public/js/mapa.js`, `graficos.js`, `componentes.js`, `comum.js` | Mapa, gráficos e peças comuns |
+| `PRODUCT.md`, `DESIGN.md`, `.impeccable/surfaces/` | Para quem é o site, o sistema visual (cores, letra, componentes, regras) e a direção escolhida com a skill Impeccable |
 | `public/saude.html` | Saúde do coletor |
 | `test/` | Testes (Vitest); `banco.test.ts` usa um D1 local |
 

@@ -1,14 +1,15 @@
-// Mapa da bacia: rios destacados e um ponto por estação, com o nível. Passar o mouse mostra o nível, a
-// tendência e o gráfico de 24 h; clicar abre a página da estação. No celular, o toque mostra o balão
-// com o link.
+// Mapa da bacia no mundo "Marcas da enchente": fundo recolorido em reboco, rios na cor da placa, um ponto
+// por estação na cor da faixa (com a palavra quando passa do normal). Passar o mouse mostra o balão;
+// clicar abre a página da estação; no celular, o toque abre o balão com o link.
 //
 // Fundo do mapa: OpenFreeMap (gratuito, sem chave, dados do OpenStreetMap). Se ele não responder, o mapa
 // abre só com os rios e as estações, sem ruas nem nomes.
-import { atrasada, cssVar, el, faixaDe, idadeTexto, NOMES_FAIXA, num, ORDEM_FAIXA, serie24, tendencia } from './comum.js';
-import { corFaixa, sparkline } from './graficos.js';
+import { cssVar, el, guardado, horaCurta, NOMES_FAIXA, num, ORDEM_FAIXA } from './comum.js';
+import { cotaAConfirmar, destaqueDaCidade, estadoDe, infoTendencia } from './parede.js';
 
 const ESTILOS = { claro: 'https://tiles.openfreemap.org/styles/positron', escuro: 'https://tiles.openfreemap.org/styles/dark' };
 const LIMITES = [[-51.4, -28.6], [-47.6, -25.9]];
+const escuro = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
 let biblioteca = null;
 async function carregarBiblioteca() {
@@ -18,19 +19,33 @@ async function carregarBiblioteca() {
   return biblioteca;
 }
 
-async function carregarEstilo(escuro) {
+// Recolore o estilo do OpenFreeMap com as cores da parede: terra em reboco, água em azul apagado,
+// ruas quase sumidas. Placas e nomes de rua saem.
+function recolorir(estilo) {
+  const c = {
+    terra: cssVar('--reboco-fundo'), agua: escuro() ? '#2A3A52' : '#B9C6D6', rua: escuro() ? '#323A40' : '#E4E7E8',
+    texto: cssVar('--tinta-2'), halo: cssVar('--reboco-fundo'), verde: escuro() ? '#28302F' : '#CBD3CC',
+  };
+  estilo.layers = estilo.layers.filter((l) => !/^(highway-name|highway-shield|road_shield|airport|label_other|poi|aeroway|railway)/.test(l.id));
+  for (const l of estilo.layers) {
+    l.paint ??= {};
+    if (l.type === 'background') l.paint['background-color'] = c.terra;
+    else if (l.type === 'fill' && /water/.test(l.id)) l.paint['fill-color'] = c.agua;
+    else if (l.type === 'fill' && /park|wood|landcover|landuse/.test(l.id)) { l.paint['fill-color'] = c.verde; l.paint['fill-opacity'] = 0.6; }
+    else if (l.type === 'line' && /waterway/.test(l.id)) l.paint['line-color'] = c.agua;
+    else if (l.type === 'line' && /highway|road|bridge|tunnel/.test(l.id)) l.paint['line-color'] = c.rua;
+    else if (l.type === 'symbol') { l.paint['text-color'] = c.texto; l.paint['text-halo-color'] = c.halo; }
+  }
+  return estilo;
+}
+
+async function carregarEstilo() {
   try {
-    const r = await fetch(escuro ? ESTILOS.escuro : ESTILOS.claro, { signal: AbortSignal.timeout(7000) });
+    const r = await fetch(escuro() ? ESTILOS.escuro : ESTILOS.claro, { signal: AbortSignal.timeout(7000) });
     if (!r.ok) throw new Error(String(r.status));
-    const estilo = await r.json();
-    // Menos poluição: sem placas e nomes de rua; os nomes de cidade ficam.
-    estilo.layers = estilo.layers.filter((l) => !/^(highway-name|highway-shield|road_shield|airport|label_other|poi)/.test(l.id));
-    return { estilo, comTexto: true };
+    return { estilo: recolorir(await r.json()), comTexto: true };
   } catch {
-    return {
-      estilo: { version: 8, sources: {}, layers: [{ id: 'fundo', type: 'background', paint: { 'background-color': escuro ? '#0f1720' : '#eef2f5' } }] },
-      comTexto: false,
-    };
+    return { estilo: { version: 8, sources: {}, layers: [{ id: 'fundo', type: 'background', paint: { 'background-color': cssVar('--reboco-fundo') } }] }, comTexto: false };
   }
 }
 
@@ -47,32 +62,54 @@ const LOCALE = {
   'CooperativeGesturesHandler.MobileHelpText': 'Use dois dedos para mover o mapa',
 };
 
-// Cor do ponto: a faixa quando a fonte publica cotas; azul quando não publica; cinza quando parou.
-function corDe(item, barragem) {
-  if (barragem) return cssVar('--agua-forte');
-  if (item.situacao !== 'ativa' || atrasada(item)) return cssVar('--parada');
-  const f = faixaDe(item.nivel, item.cotas);
-  return f ? cssVar(`--${f}`) : cssVar('--semcota');
-}
+// As maiores cidades da bacia: o nome delas aparece antes do das menores.
+const GRANDES = new Set(['Blumenau', 'Itajaí', 'Brusque', 'Rio do Sul']);
 
-function feicoes(dados) {
+function feicoes(dados, estreito = false) {
   const lista = [];
+  // Cidade com muitos pontos juntos (Itajaí, 12): de longe, um ponto só no meio deles ("Itajaí (12 pontos)", com
+  // o nível do ponto mais perto da cota de atenção); de perto, todos, cada um no seu lugar.
+  const porCidade = new Map();
+  for (const e of dados.estacoes) porCidade.set(e.municipio, [...(porCidade.get(e.municipio) ?? []), e]);
+  const destaques = new Map();
+  for (const [c, es] of porCidade) if (es.length > 3) destaques.set(c, destaqueDaCidade(es).id);
+  const minhaCidade = guardado('cidade', null);
   for (const e of dados.estacoes) {
     if (e.latitude == null) continue;
-    const f = faixaDe(e.nivel, e.cotas);
-    const parada = e.situacao !== 'ativa' || atrasada(e);
+    const f = estadoDe(e);
+    const parada = f === 'parada';
     lista.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [e.longitude, e.latitude] },
       properties: {
-        id: e.id, barragem: false, cor: corDe(e, false),
-        rotulo: e.situacao !== 'ativa' ? 'sem dado' : e.nivel == null ? 'sem leitura' : `${num(e.nivel)} m`,
+        id: e.id, barragem: false,
+        cor: parada ? cssVar('--parada') : f ? cssVar(`--${f}`) : cssVar('--reboco-claro'),
+        corTexto: f && f !== 'parada' && f !== 'normal' ? cssVar(`--${f}-txt`) : cssVar('--tinta'),
+        nivel: e.situacao !== 'ativa' ? 'sem dado' : e.nivel == null ? 'sem leitura' : `${num(e.nivel)} m${e.referencia === 'altitude' ? ' (altitude)' : ''}`,
         cidade: e.municipio,
-        // Menor = mais importante (o mapa esconde os rótulos menos importantes quando eles se sobrepõem).
-        prioridade: (e.principal ? 0 : 20) - (f ? ORDEM_FAIXA[f] * 3 : 0) + (parada ? 40 : 0) + (e.referencia === 'altitude' ? 10 : 0),
-        raio: e.principal ? 7 : 5.5,
-        opacidade: parada ? 0.6 : 1,
+        palavra: f && f !== 'parada' && ORDEM_FAIXA[f] >= 1 ? `em ${NOMES_FAIXA[f].toLowerCase()}${cotaAConfirmar(e) ? ' (a confirmar)' : ''}` : '',
+        // Menor = mais importante (o mapa esconde os rótulos que se sobrepõem, a partir dos menos importantes).
+        // A cidade escolhida pelo morador ganha de todas.
+        // Ordem: a cidade do morador; quem está em atenção ou pior; as cidades grandes; as barragens; o resto.
+        prioridade: (e.municipio === minhaCidade && (!destaques.has(e.municipio) || destaques.get(e.municipio) === e.id) ? -60 : 0)
+          + (f && f !== 'parada' && ORDEM_FAIXA[f] >= 1 ? -40 - ORDEM_FAIXA[f] * 3 : 0)
+          + (GRANDES.has(e.municipio) && (!destaques.has(e.municipio) || destaques.get(e.municipio) === e.id) ? -20 : 0)
+          + (e.principal ? 0 : 20) + (parada ? 40 : 0) + (e.referencia === 'altitude' ? 10 : 0),
+        raio: f && f !== 'parada' && ORDEM_FAIXA[f] >= 1 ? 9 : e.principal ? 6.5 : 5,
+        secundario: destaques.has(e.municipio) && (destaques.get(e.municipio) === e.id || !(f && f !== 'parada' && ORDEM_FAIXA[f] >= 1)),
+        cidadeGrupo: e.municipio,
       },
+    });
+  }
+  for (const [c, id] of destaques) {
+    const d = lista.find((x) => x.properties.id === id);
+    const pts = porCidade.get(c).filter((e) => e.latitude != null);
+    if (!d || !pts.length) continue;
+    const meio = [pts.reduce((a, e) => a + e.longitude, 0) / pts.length, pts.reduce((a, e) => a + e.latitude, 0) / pts.length];
+    const n = porCidade.get(c).length;
+    lista.push({
+      type: 'Feature', geometry: { type: 'Point', coordinates: meio },
+      properties: { ...d.properties, grupo: true, secundario: false, cidadeGrupo: estreito ? `${c}\n${n} pontos` : `${c} (${n} pontos)` },
     });
   }
   for (const b of dados.barragens) {
@@ -81,152 +118,188 @@ function feicoes(dados) {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [b.longitude, b.latitude] },
       properties: {
-        id: b.id, barragem: true, cor: corDe(b, true),
-        rotulo: b.ocupacao_pct != null ? `${num(b.ocupacao_pct, 0)}% cheia` : 'sem leitura',
-        cidade: b.nome, prioridade: 1, raio: 8, opacidade: atrasada(b) ? 0.6 : 1,
+        id: b.id, barragem: true, cor: cssVar('--placa'), corTexto: cssVar('--tinta'),
+        nivel: b.ocupacao_pct != null ? `${num(b.ocupacao_pct, 0)}% cheia` : 'sem leitura', cidade: b.nome, cidadeGrupo: b.nome, palavra: '',
+        prioridade: 2, raio: 8, secundario: false,
       },
     });
+  }
+  // Ponto na beira oeste ou leste da bacia: o nome vai para dentro do mapa, não para fora da borda.
+  const lons = lista.map((f) => f.geometry.coordinates[0]);
+  const oeste = Math.min(...lons), largura = Math.max(...lons) - oeste || 1;
+  for (const f of lista) {
+    const x = (f.geometry.coordinates[0] - oeste) / largura;
+    f.properties.borda = x < 0.12 ? 'oeste' : x > 0.75 ? 'leste' : '';
+    // O grupo da foz (Itajaí) põe o nome sobre o mar, onde não há outros pontos.
+    if (f.properties.grupo && f.properties.borda === 'leste') f.properties.borda = 'mar';
   }
   return { type: 'FeatureCollection', features: lista };
 }
 
-function balao(item, dados, toque) {
+// Onde o nome pode ficar em volta do ponto, em ordem de preferência (deslocamentos em "em").
+// O nome fica fora da área do próprio ponto (o "furo", abaixo), senão ele mesmo se bloqueia.
+const EM_VOLTA = {
+  top: [0, 1.2], bottom: [0, -1.2], left: [1.2, 0], right: [-1.2, 0],
+  'top-left': [0.85, 0.85], 'top-right': [-0.85, 0.85], 'bottom-left': [0.85, -0.85], 'bottom-right': [-0.85, -0.85],
+};
+const anchors = (...ordem) => ['literal', ordem.flatMap((a) => [a, EM_VOLTA[a]])];
+// Na beira, o nome vai para dentro do mapa. A cidade do morador tem mais lugares para tentar (o nome dela não
+// pode sumir).
+const ANCORA_POR_BORDA = ['case', ['<', ['get', 'prioridade'], -50],
+  ['match', ['get', 'borda'],
+    'mar', anchors('left', 'top-left', 'bottom-left', 'top', 'bottom'),
+    'oeste', anchors('left', 'bottom-left', 'top-left', 'top', 'bottom'),
+    'leste', anchors('right', 'bottom-right', 'top-right', 'top', 'bottom'),
+    anchors('top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right')],
+  ['match', ['get', 'borda'],
+    'mar', anchors('left', 'top-left', 'bottom-left', 'top', 'bottom'),
+    'oeste', anchors('left', 'top', 'bottom'),
+    'leste', anchors('right', 'top', 'bottom'),
+    anchors('top', 'bottom', 'right', 'left')]];
+
+const CAMADAS_TOQUE = ['estacoes-toque', 'estacoes-toque-sec', 'grupo-toque'];
+
+function balao(item, toque) {
   const barragem = 'comportas' in item;
-  const caixa = el('div', { class: 'balao' });
-  caixa.append(el('h3', {}, item.nome), el('div', { class: 'onde' }, [item.municipio, item.rio].filter(Boolean).join(' · ')));
-  const valor = el('div', { class: 'valor' });
+  const caixa = el('div', { class: 'balao' }, el('h3', {}, item.nome), el('p', { class: 'rodape-balao' }, [item.municipio, item.rio].filter(Boolean).join(', ')));
   if (barragem) {
-    valor.append(el('strong', { class: 'num' }, item.ocupacao_pct != null ? `${num(item.ocupacao_pct, 1)}%` : '—'), el('span', { class: 'suave' }, 'de ocupação'));
     const abertas = item.comportas.filter((c) => c.aberta).length;
-    caixa.append(valor, el('div', { class: 'rodape-balao' }, item.comportas.length ? `${abertas} de ${item.comportas.length} comportas abertas` : ''));
+    caixa.append(el('p', { class: 'valor' }, item.ocupacao_pct != null ? `${num(item.ocupacao_pct, 0)}% cheia` : 'sem leitura'),
+      el('p', { class: 'rodape-balao' }, item.comportas.length ? `${abertas} de ${item.comportas.length} comportas abertas` : ''));
   } else {
-    const f = faixaDe(item.nivel, item.cotas);
-    const t = tendencia(item);
-    valor.append(el('strong', { class: 'num' }, item.nivel != null ? `${num(item.nivel)} m` : 'sem leitura'));
-    if (t) valor.append(el('span', { class: `tendencia ${t.classe}` }, t.texto));
-    if (f) valor.append(el('span', { class: `chip ${f}` }, NOMES_FAIXA[f]));
-    else if (item.referencia === 'altitude') valor.append(el('span', { class: 'chip neutro' }, 'altitude'));
-    caixa.append(valor);
+    const f = estadoDe(item);
+    const t = infoTendencia(item);
+    caixa.append(el('p', { class: 'valor' }, item.nivel != null ? `${num(item.nivel)} m` : 'sem leitura'));
+    if (f && f !== 'parada') caixa.append(el('p', { class: `estado f-${f}` }, el('span', { class: 'sw' }), el('b', {}, NOMES_FAIXA[f]), t.curto ? `, ${t.curto}` : ''));
+    else if (f === 'parada') caixa.append(el('p', { class: 'estado f-parada' }, el('b', {}, 'Parada'), item.medido_em ? ` desde ${horaCurta(item.medido_em)}` : ''));
+    else if (t.curto) caixa.append(el('p', { class: 'estado' }, t.texto));
   }
-  caixa.append(sparkline(serie24(dados, item, barragem), {
-    largura: 220, altura: 44, cotas: barragem ? null : item.cotas, faixa: barragem ? null : faixaDe(item.nivel, item.cotas), minimo: barragem ? 2 : 0.2,
-  }));
-  const idade = item.medido_em ? (Date.now() - Date.parse(item.medido_em)) / 1000 : null;
-  const pe = item.situacao && item.situacao !== 'ativa' ? item.situacao : idade == null ? 'sem leitura' : atrasada(item) ? `sem leitura nova ${idadeTexto(idade)}` : `medido ${idadeTexto(idade)}`;
-  caixa.append(el('div', { class: `rodape-balao${atrasada(item) ? ' idade-atrasada' : ''}` }, `${pe} · 24 h no gráfico`));
-  caixa.append(toque ? el('a', { class: 'ir', href: `/estacao/${item.id}` }, 'Ver detalhes →') : el('div', { class: 'rodape-balao' }, 'Clique para ver os detalhes'));
+  if (item.medido_em) caixa.append(el('p', { class: 'rodape-balao' }, `Medido ${horaCurta(item.medido_em).includes(',') ? 'em' : 'às'} ${horaCurta(item.medido_em)}`));
+  caixa.append(toque ? el('a', { class: 'ir', href: `/estacao/${item.id}` }, 'Ver a estação') : el('p', { class: 'rodape-balao' }, 'Clique para ver a estação'));
   return caixa;
 }
 
-// Cria o mapa dentro de "caixa". Opções: foco (id de uma estação para centralizar), legenda (bool).
 export async function criarMapa(caixa, dados, { foco = null, zoomFoco = 11.5 } = {}) {
-  const escuro = matchMedia('(prefers-color-scheme: dark)').matches;
   let ml, est;
   try {
-    [ml, est] = await Promise.all([carregarBiblioteca(), carregarEstilo(escuro)]);
+    [ml, est] = await Promise.all([carregarBiblioteca(), carregarEstilo()]);
   } catch (e) {
     console.error('mapa', e);
     caixa.replaceChildren(el('p', { class: 'vazio' }, 'Não foi possível carregar o mapa. Os níveis estão logo abaixo.'));
     return null;
   }
-
-  // Enquadra todas as estações; sem coordenadas (resumo antigo), a bacia inteira.
-  const pontos = feicoes(dados).features.map((f) => f.geometry.coordinates);
+  // Enquadra os pontos da bacia (do Alto Vale à foz). No celular o mapa é baixo e largo como a bacia, para não
+  // sobrar terra fora dela em cima e embaixo.
+  const pontos = [...dados.estacoes, ...dados.barragens].filter((x) => x.latitude != null).map((x) => [x.longitude, x.latitude]);
   const limites = pontos.length
     ? pontos.reduce((b, p) => b.extend(p), new ml.LngLatBounds(pontos[0], pontos[0]))
-    : new ml.LngLatBounds([-50.3, -27.8], [-48.6, -26.6]);
+    : new ml.LngLatBounds([-50.15, -27.72], [-48.62, -26.68]);
+  const estreito = caixa.clientWidth < 520;
   let alvo = foco ? [...dados.estacoes, ...dados.barragens].find((x) => x.id === foco) : null;
   if (alvo?.latitude == null) alvo = null;
 
   let mapa;
   try {
     mapa = new ml.Map({
-      container: caixa,
-      style: est.estilo,
-      bounds: alvo ? undefined : limites,
-      center: alvo ? [alvo.longitude, alvo.latitude] : undefined,
-      zoom: alvo ? zoomFoco : undefined,
-      fitBoundsOptions: { padding: { top: 56, bottom: 30, left: 24, right: 24 } },
-      maxBounds: LIMITES,
-      minZoom: 6.5,
-      maxZoom: 16,
-      cooperativeGestures: true,
-      attributionControl: false,
-      locale: LOCALE,
-      dragRotate: false,
-      pitchWithRotate: false,
+      container: caixa, style: est.estilo,
+      bounds: alvo ? undefined : limites, center: alvo ? [alvo.longitude, alvo.latitude] : undefined, zoom: alvo ? zoomFoco : undefined,
+      // Mais folga à direita (os rótulos de Itajaí, na foz, ficam na beira), proporcional à largura do mapa.
+      fitBoundsOptions: { padding: estreito ? { top: 30, bottom: 30, left: 72, right: 70 } : { top: 40, bottom: 40, left: 50, right: 110 } },
+      maxBounds: LIMITES, minZoom: 6.5, maxZoom: 16, cooperativeGestures: true, attributionControl: false,
+      locale: LOCALE, dragRotate: false, pitchWithRotate: false,
     });
   } catch (e) {
     console.error('mapa', e);
-    caixa.replaceChildren(el('p', { class: 'vazio' }, 'Seu navegador não conseguiu abrir o mapa. Os níveis estão logo abaixo.'));
+    caixa.replaceChildren(el('p', { class: 'vazio' }, 'Seu navegador não conseguiu abrir o mapa. Os níveis estão nas listas.'));
     return null;
   }
   mapa.touchZoomRotate.disableRotation();
-  mapa.addControl(new ml.NavigationControl({ showCompass: false }), 'top-right');
-  mapa.addControl(new ml.FullscreenControl(), 'top-right');
-  mapa.addControl(new ml.AttributionControl({ compact: true, customAttribution: 'Rios: © colaboradores do OpenStreetMap · Fundo: OpenFreeMap · Chuva: Defesa Civil de SC' }), 'bottom-right');
-  if (dados.chuva?.pluviometros?.length)
-    mapa.addControl(new ControleChuva((ligado) => { if (mapa.loaded() || mapa.isStyleLoaded()) ligarChuva(mapa, ligado, est.comTexto); }), 'top-right');
+  // No celular os botões ficam em cima à esquerda: é o canto sem estações (a foz, com Itajaí, fica em cima à
+  // direita, e o Alto Vale embaixo à esquerda).
+  const cantoBotoes = estreito ? 'top-left' : 'top-right';
+  mapa.addControl(new ml.NavigationControl({ showCompass: false }), cantoBotoes);
+  mapa.addControl(new ml.FullscreenControl(), cantoBotoes);
+  mapa.addControl(new ml.AttributionControl({ compact: true, customAttribution: 'Rios: © colaboradores do OpenStreetMap · Fundo: OpenFreeMap' }), 'bottom-right');
 
-  const fundo = cssVar('--cartao'), agua = cssVar('--agua'), aguaForte = cssVar('--agua-forte'), texto = cssVar('--texto');
+  const tinta = cssVar('--tinta'), placa = cssVar('--placa'), halo = cssVar('--reboco-fundo');
   mapa.on('load', () => {
     mapa.addSource('rios', { type: 'geojson', data: '/mapa/rios.geojson' });
     const principal = ['==', ['get', 'tipo'], 'principal'];
     mapa.addLayer({
-      id: 'rios-contorno', type: 'line', source: 'rios', layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': fundo, 'line-opacity': 0.85, 'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', principal, 5.5, 3], 12, ['case', principal, 11, 5.5]] },
-    });
-    mapa.addLayer({
       id: 'rios', type: 'line', source: 'rios', layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
-        'line-color': agua, 'line-opacity': ['case', principal, 0.95, 0.65],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', principal, 2.8, 1.2], 12, ['case', principal, 6, 2.6]],
+        'line-color': placa, 'line-opacity': ['case', principal, 0.95, 0.6],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 7, ['case', principal, 2.6, 1.1], 12, ['case', principal, 5.5, 2.4]],
       },
     });
     if (est.comTexto)
       mapa.addLayer({
         id: 'rios-nome', type: 'symbol', source: 'rios', minzoom: 8.3, filter: principal,
         layout: { 'symbol-placement': 'line', 'text-field': ['get', 'nome'], 'text-font': ['Noto Sans Italic'], 'text-size': 12.5, 'symbol-spacing': 320, 'text-max-angle': 30 },
-        paint: { 'text-color': aguaForte, 'text-halo-color': fundo, 'text-halo-width': 1.6 },
+        paint: { 'text-color': placa, 'text-halo-color': halo, 'text-halo-width': 1.6 },
       });
 
-    mapa.addSource('estacoes', { type: 'geojson', data: feicoes(dados) });
-    mapa.addLayer({
-      id: 'estacoes-circulo', type: 'circle', source: 'estacoes',
-      layout: { 'circle-sort-key': ['-', 100, ['get', 'prioridade']] },
-      paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, ['*', ['get', 'raio'], 0.85], 12, ['*', ['get', 'raio'], 1.5]],
-        'circle-color': ['get', 'cor'],
-        'circle-stroke-color': ['case', ['get', 'barragem'], aguaForte, '#ffffff'],
-        'circle-stroke-width': ['case', ['get', 'barragem'], 3, 2],
-        'circle-opacity': ['get', 'opacidade'],
-        'circle-stroke-opacity': ['get', 'opacidade'],
-      },
-    });
+    mapa.addSource('estacoes', { type: 'geojson', data: feicoes(dados, estreito) });
     if (alvo)
-      mapa.addLayer({
-        id: 'estacao-foco', type: 'circle', source: 'estacoes', filter: ['==', ['get', 'id'], alvo.id],
-        paint: { 'circle-radius': 18, 'circle-color': 'transparent', 'circle-stroke-color': agua, 'circle-stroke-width': 3, 'circle-stroke-opacity': 0.6 },
-      }, 'estacoes-circulo');
-    if (est.comTexto)
-      mapa.addLayer({
-        id: 'estacoes-rotulo', type: 'symbol', source: 'estacoes',
-        layout: {
-          'text-field': ['format', ['get', 'rotulo'], { 'text-font': ['literal', ['Noto Sans Bold']] }, '\n', {}, ['get', 'cidade'], { 'font-scale': 0.82, 'text-font': ['literal', ['Noto Sans Regular']] }],
-          'text-size': 12.5, 'text-variable-anchor': ['top', 'bottom', 'right', 'left'], 'text-radial-offset': 1, 'text-justify': 'auto',
-          'symbol-sort-key': ['get', 'prioridade'], 'text-padding': 3,
-        },
-        paint: { 'text-color': texto, 'text-halo-color': fundo, 'text-halo-width': 1.8 },
-      });
-    // Área de toque maior que o ponto (no celular o ponto é pequeno para o dedo).
-    mapa.addLayer({ id: 'estacoes-toque', type: 'circle', source: 'estacoes', paint: { 'circle-radius': 16, 'circle-color': '#000', 'circle-opacity': 0 } });
-    caixa.closest('.mapa-bloco')?.querySelector('.mapa-carregando')?.remove();
-    // Créditos começam recolhidos (no "i"), para não cobrir a legenda.
+      mapa.addLayer({ id: 'estacao-foco', type: 'circle', source: 'estacoes', filter: ['all', ['==', ['get', 'id'], alvo.id], ['!=', ['get', 'grupo'], true]], paint: { 'circle-radius': 17, 'circle-color': 'transparent', 'circle-stroke-color': tinta, 'circle-stroke-width': 2.5 } });
+    const SEC = 10; // zoom a partir do qual os pontos secundários aparecem
+    // Três grupos de pontos: os principais (sempre), os secundários (só de perto) e o ponto que junta uma cidade
+    // cheia de estações (só de longe).
+    const grupoF = ['==', ['get', 'grupo'], true];
+    const principalF = ['all', ['!=', ['get', 'secundario'], true], ['!', grupoF]], secundarioF = ['==', ['get', 'secundario'], true];
+    const pintura = {
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, ['*', ['get', 'raio'], 0.85], 12, ['*', ['get', 'raio'], 1.4]],
+      'circle-color': ['get', 'cor'], 'circle-stroke-color': tinta, 'circle-stroke-width': ['case', ['get', 'barragem'], 2.5, 1.8],
+    };
+    mapa.addLayer({ id: 'estacoes-circulo', type: 'circle', source: 'estacoes', filter: principalF, layout: { 'circle-sort-key': ['-', 100, ['get', 'prioridade']] }, paint: pintura });
+    mapa.addLayer({ id: 'estacoes-circulo-sec', type: 'circle', source: 'estacoes', minzoom: SEC, filter: secundarioF, paint: pintura });
+    mapa.addLayer({ id: 'grupo-circulo', type: 'circle', source: 'estacoes', maxzoom: SEC, filter: grupoF, paint: pintura });
+    if (est.comTexto) {
+      const texto = (cidade) => ['format',
+        ['get', 'nivel'], { 'text-font': ['literal', ['Noto Sans Bold']] }, '\n', {},
+        cidade, { 'font-scale': 0.85, 'text-font': ['literal', ['Noto Sans Regular']] },
+        ['case', ['==', ['get', 'palavra'], ''], '', ['concat', '\n', ['get', 'palavra']]], { 'font-scale': 0.9, 'text-font': ['literal', ['Noto Sans Bold']], 'text-color': ['get', 'corTexto'] }];
+      const rotulo = {
+        'text-size': 13, 'text-variable-anchor-offset': ANCORA_POR_BORDA, 'text-justify': 'auto',
+        // No celular, mais espaço em volta de cada nome: menos nomes, sem um encostar no outro.
+        'symbol-sort-key': ['get', 'prioridade'], 'text-padding': 2,
+      };
+      const pinturaTexto = { 'text-color': tinta, 'text-halo-color': halo, 'text-halo-width': 2 };
+      // No celular só ganham nome a cidade do morador, quem está em atenção ou pior e as cidades grandes; os outros
+      // pontos se veem pelo toque. Não cabe mais que isso num mapa de 340 px sem um nome cobrir o outro.
+      const comNome = estreito ? ['all', principalF, ['<=', ['get', 'prioridade'], -20]] : principalF;
+      // A cidade do morador e quem está em atenção ou pior ganham uma camada própria, acima do "furo": o nome
+      // delas nunca some para desviar de um ponto (perto de Rio do Sul, os pontos são muitos).
+      const urgente = ['<=', ['get', 'prioridade'], -30];
+      mapa.addLayer({ id: 'estacoes-rotulo', type: 'symbol', source: 'estacoes', filter: ['all', comNome, ['!', urgente]], layout: { ...rotulo, 'text-field': texto(['get', 'cidade']) }, paint: pinturaTexto });
+      mapa.addLayer({ id: 'grupo-rotulo', type: 'symbol', source: 'estacoes', maxzoom: SEC, filter: grupoF, layout: { ...rotulo, 'text-field': texto(['get', 'cidadeGrupo']) }, paint: pinturaTexto });
+      mapa.addLayer({ id: 'estacoes-rotulo-sec', type: 'symbol', source: 'estacoes', minzoom: SEC, filter: secundarioF, layout: { ...rotulo, 'text-field': texto(['get', 'cidade']) }, paint: pinturaTexto });
+      // Cada ponto ocupa o seu lugar: um ícone transparente do tamanho do círculo, posto antes dos nomes, faz
+      // os nomes desviarem dos pontos (senão "Botuverá" ficava em cima do ponto de Brusque).
+      // No celular, só os pontos que têm nome: com todos, o furo apagaria quase todos os nomes.
+      if (!mapa.hasImage('furo')) mapa.addImage('furo', { width: 24, height: 24, data: new Uint8Array(24 * 24 * 4) });
+      const furo = {
+        'icon-image': 'furo', 'icon-allow-overlap': true, 'icon-ignore-placement': false,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 7, ['/', ['*', ['get', 'raio'], 1.7], 24], 12, ['/', ['*', ['get', 'raio'], 2.8], 24]],
+      };
+      mapa.addLayer({ id: 'estacoes-furo', type: 'symbol', source: 'estacoes', filter: comNome, layout: furo });
+      if (!estreito) mapa.addLayer({ id: 'estacoes-furo-sec', type: 'symbol', source: 'estacoes', minzoom: SEC, filter: secundarioF, layout: furo });
+      mapa.addLayer({ id: 'grupo-furo', type: 'symbol', source: 'estacoes', maxzoom: SEC, filter: grupoF, layout: furo });
+      mapa.addLayer({ id: 'estacoes-rotulo-urgente', type: 'symbol', source: 'estacoes', filter: ['all', comNome, urgente], layout: { ...rotulo, 'text-field': texto(['get', 'cidade']) }, paint: pinturaTexto });
+    }
+    mapa.addLayer({ id: 'estacoes-toque', type: 'circle', source: 'estacoes', filter: principalF, paint: { 'circle-radius': 18, 'circle-color': '#000', 'circle-opacity': 0 } });
+    mapa.addLayer({ id: 'estacoes-toque-sec', type: 'circle', source: 'estacoes', minzoom: SEC, filter: secundarioF, paint: { 'circle-radius': 18, 'circle-color': '#000', 'circle-opacity': 0 } });
+    mapa.addLayer({ id: 'grupo-toque', type: 'circle', source: 'estacoes', maxzoom: SEC, filter: grupoF, paint: { 'circle-radius': 18, 'circle-color': '#000', 'circle-opacity': 0 } });
+    caixa.querySelector('.mapa-carregando')?.remove();
     caixa.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
   });
 
   const podeApontar = matchMedia('(hover: hover) and (pointer: fine)').matches;
   let popup = null, aberto = null;
+  // No celular, o toque abre um painel embaixo do mapa (o balão saía cortado na borda).
+  const painel = el('div', { class: 'painel-mapa', role: 'region', 'aria-label': 'Estação escolhida no mapa', 'aria-live': 'polite', hidden: true });
+  caixa.append(painel);
+  const fecharPainel = () => { painel.hidden = true; painel.replaceChildren(); aberto = null; };
   const achar = (id) => [...mapa._dados.estacoes, ...mapa._dados.barragens].find((x) => x.id === id);
   const mostrar = (ev, toque) => {
     const f = ev.features?.[0];
@@ -238,36 +311,29 @@ export async function criarMapa(caixa, dados, { foco = null, zoomFoco = 11.5 } =
     popup?.remove();
     aberto = id;
     popup = new ml.Popup({ closeButton: toque, closeOnClick: toque, offset: 14, maxWidth: '280px', focusAfterOpen: false })
-      .setLngLat(f.geometry.coordinates).setDOMContent(balao(item, mapa._dados, toque)).addTo(mapa);
+      .setLngLat(f.geometry.coordinates).setDOMContent(balao(item, toque)).addTo(mapa);
   };
   mapa._dados = dados;
-  const balaoChuva = (p) => el('div', { class: 'balao' },
-    el('h3', {}, `Chuva em ${p.nome}`),
-    el('div', { class: 'valor' }, el('strong', { class: 'num' }, `${num(p.h24, 0)} mm`), el('span', { class: 'suave' }, 'em 24 h')),
-    el('div', { class: 'rodape-balao' }, `Última hora: ${p.h1 != null ? num(p.h1, 1) : '—'} mm · 72 h: ${p.h72 != null ? num(p.h72, 0) : '—'} mm`),
-    el('div', { class: 'rodape-balao' }, 'Pluviômetro da Defesa Civil de SC'));
-  mapa.on('mousemove', 'chuva-circulo', (ev) => {
-    if (!podeApontar || mapa.queryRenderedFeatures(ev.point, { layers: ['estacoes-toque'] }).length) return;
-    const f = ev.features?.[0];
-    if (!f || aberto === `chuva:${f.properties.codigo}`) return;
-    popup?.remove(); aberto = `chuva:${f.properties.codigo}`;
-    popup = new ml.Popup({ closeButton: false, closeOnClick: false, offset: 10, focusAfterOpen: false }).setLngLat(f.geometry.coordinates).setDOMContent(balaoChuva(f.properties)).addTo(mapa);
-  });
-  mapa.on('mouseleave', 'chuva-circulo', () => { if (podeApontar && aberto?.startsWith('chuva:')) { popup?.remove(); aberto = null; } });
-  mapa.on('click', 'chuva-circulo', (ev) => {
-    if (podeApontar || mapa.queryRenderedFeatures(ev.point, { layers: ['estacoes-toque'] }).length) return;
-    const f = ev.features?.[0];
-    if (!f) return;
-    popup?.remove(); aberto = `chuva:${f.properties.codigo}`;
-    popup = new ml.Popup({ closeButton: true, closeOnClick: true, offset: 10, focusAfterOpen: false }).setLngLat(f.geometry.coordinates).setDOMContent(balaoChuva(f.properties)).addTo(mapa);
-  });
-  mapa.on('mousemove', 'estacoes-toque', (ev) => { if (!podeApontar) return; mapa.getCanvas().style.cursor = 'pointer'; mostrar(ev, false); });
-  mapa.on('mouseleave', 'estacoes-toque', () => { if (!podeApontar) return; mapa.getCanvas().style.cursor = ''; popup?.remove(); aberto = null; });
-  mapa.on('click', 'estacoes-toque', (ev) => {
-    const id = ev.features?.[0]?.properties.id;
-    if (!id) return;
-    if (podeApontar) location.href = `/estacao/${id}`;
-    else mostrar(ev, true);
+  mapa._estreito = estreito;
+  for (const camada of CAMADAS_TOQUE) {
+    mapa.on('mousemove', camada, (ev) => { if (!podeApontar) return; mapa.getCanvas().style.cursor = 'pointer'; mostrar(ev, false); });
+    mapa.on('mouseleave', camada, () => { if (!podeApontar) return; mapa.getCanvas().style.cursor = ''; popup?.remove(); aberto = null; });
+    mapa.on('click', camada, (ev) => {
+      const id = ev.features?.[0]?.properties.id;
+      if (!id) return;
+      if (podeApontar) { location.href = `/estacao/${id}`; return; }
+      const item = achar(id);
+      if (!item) return;
+      aberto = id;
+      painel.replaceChildren(el('button', { type: 'button', class: 'botao fechar', onclick: fecharPainel }, 'Fechar'), balao(item, true));
+      painel.hidden = false;
+    });
+  }
+  // Toque fora de qualquer estação fecha o painel.
+  mapa.on('click', (ev) => {
+    if (podeApontar) return;
+    const camadas = CAMADAS_TOQUE.filter((c) => mapa.getLayer(c));
+    if (!mapa.queryRenderedFeatures(ev.point, { layers: camadas }).length) fecharPainel();
   });
   return mapa;
 }
@@ -275,68 +341,5 @@ export async function criarMapa(caixa, dados, { foco = null, zoomFoco = 11.5 } =
 export function atualizarMapa(mapa, dados) {
   if (!mapa) return;
   mapa._dados = dados;
-  mapa.getSource('estacoes')?.setData(feicoes(dados));
-  mapa.getSource('chuva')?.setData(feicoesChuva(dados));
-}
-
-// Chuva das últimas 24 h (fase 5): um círculo por pluviômetro, maior e mais escuro quanto mais choveu.
-export const ESCALA_CHUVA = [[0, '#d6ebff'], [5, '#a9d3ff'], [15, '#5fa8f5'], [30, '#1f6fd1'], [60, '#4b3bbf'], [100, '#9b1f8c']];
-function feicoesChuva(dados) {
-  const lista = dados.chuva?.pluviometros ?? [];
-  return {
-    type: 'FeatureCollection',
-    features: lista.filter((p) => p.h24 != null).map((p) => ({
-      type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
-      properties: { codigo: p.codigo, nome: p.nome, h1: p.h1, h24: p.h24, h72: p.h72, rotulo: `${Math.round(p.h24)} mm` },
-    })),
-  };
-}
-
-function ligarChuva(mapa, ligado, comTexto) {
-  if (!mapa.getSource('chuva')) {
-    mapa.addSource('chuva', { type: 'geojson', data: feicoesChuva(mapa._dados) });
-    const cor = ['interpolate', ['linear'], ['get', 'h24'], ...ESCALA_CHUVA.flat()];
-    mapa.addLayer({
-      id: 'chuva-circulo', type: 'circle', source: 'chuva',
-      paint: {
-        'circle-radius': ['interpolate', ['linear'], ['get', 'h24'], 0, 5, 30, 10, 100, 18, 200, 24],
-        'circle-color': cor, 'circle-opacity': 0.72, 'circle-stroke-color': cor, 'circle-stroke-width': 1, 'circle-stroke-opacity': 1,
-      },
-    }, mapa.getLayer('estacoes-circulo') ? 'estacoes-circulo' : undefined);
-    if (comTexto)
-      mapa.addLayer({
-        id: 'chuva-rotulo', type: 'symbol', source: 'chuva', minzoom: 8,
-        layout: { 'text-field': ['get', 'rotulo'], 'text-font': ['Noto Sans Regular'], 'text-size': 10.5, 'text-allow-overlap': false },
-        paint: { 'text-color': '#ffffff', 'text-halo-color': 'rgba(0,0,0,.45)', 'text-halo-width': 1.2 },
-      }, mapa.getLayer('estacoes-circulo') ? 'estacoes-circulo' : undefined);
-  }
-  for (const id of ['chuva-circulo', 'chuva-rotulo']) if (mapa.getLayer(id)) mapa.setLayoutProperty(id, 'visibility', ligado ? 'visible' : 'none');
-}
-
-// Botão do mapa para mostrar ou esconder a chuva.
-class ControleChuva {
-  constructor(aoMudar) { this.aoMudar = aoMudar; this.ligado = false; }
-  onAdd() {
-    this.caixa = el('div', { class: 'maplibregl-ctrl maplibregl-ctrl-group ctrl-chuva' });
-    this.botao = el('button', { type: 'button', 'aria-pressed': 'false', title: 'Mostrar a chuva das últimas 24 horas' }, '☔ Chuva 24 h');
-    this.botao.addEventListener('click', () => {
-      this.ligado = !this.ligado;
-      this.botao.setAttribute('aria-pressed', String(this.ligado));
-      this.aoMudar(this.ligado);
-    });
-    this.caixa.append(this.botao);
-    return this.caixa;
-  }
-  onRemove() { this.caixa.remove(); }
-}
-
-// Legenda e resumo que ficam por cima do mapa.
-export function legenda() {
-  const item = (cor, texto) => el('span', {}, el('i', { style: `background:${cor}` }), texto);
-  const caixa = el('div', { class: 'legenda recolhida', role: 'note', 'aria-label': 'Legenda do mapa', onclick: (ev) => ev.currentTarget.classList.toggle('recolhida') },
-    el('span', { class: 'legenda-titulo' }, 'Legenda ▾'),
-    item(corFaixa('normal'), 'Normal'), item(corFaixa('atencao'), 'Atenção'), item(corFaixa('alerta'), 'Alerta'),
-    item(corFaixa('emergencia'), 'Emergência'), item('var(--semcota)', 'Sem cota publicada'), item('var(--parada)', 'Sem leitura recente'),
-    item('var(--agua-forte)', 'Barragem'));
-  return caixa;
+  mapa.getSource('estacoes')?.setData(feicoes(dados, mapa._estreito));
 }

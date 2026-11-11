@@ -110,7 +110,9 @@ export function avaliar(anterior: EstadoAlertas | null, r: Resumo, agora: number
       }
     }
 
-    // Subida rápida.
+    // Subida rápida. Fica de fora a estação que mede altitude ou cuja referência está a confirmar: um salto
+    // de sensor nela virou aviso de "+394 cm" em Rio do Oeste (11 nov 2026), e o número não é de régua.
+    if (e.referencia !== 'regua') continue;
     const v = cmPorHora(e);
     const limite = foz(e) ? SUBIDA_CMH_FOZ : SUBIDA_CMH;
     if (v != null && v >= limite) {

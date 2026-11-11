@@ -5,31 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nível Rio · saúde do coletor</title>
   <meta name="robots" content="noindex">
-  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/estilo.css">
   <style>
-    .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; margin-top: 16px; }
-    .cartao h2 { font-size: 1rem; margin: 0 0 8px; }
-    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--linha); vertical-align: top; }
-    th { color: var(--suave); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+    /* Mesmo mundo do site: seções separadas por fio de tinta, sem cartões. */
+    .cartao { border-top: 2px solid var(--tinta); margin-top: 26px; padding-top: 10px; }
+    .cartao h2 { font-size: var(--t-sub); font-weight: 800; margin: 0 0 8px; }
+    .suave { color: var(--tinta-2); }
+    table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+    th, td { text-align: left; padding: 8px 6px 8px 0; border-top: 1px solid var(--fio); vertical-align: top; }
+    th { color: var(--tinta-2); font-weight: 600; }
     td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-    .ok { color: var(--normal); font-weight: 600; }
-    .ruim { color: var(--emergencia); font-weight: 600; }
-    .barra { height: 10px; background: var(--linha); border-radius: 5px; overflow: hidden; margin: 8px 0; }
-    .barra > div { height: 100%; background: var(--destaque); width: 0; }
+    .ok { color: var(--normal-txt); font-weight: 700; }
+    .ruim { color: var(--emergencia-txt); font-weight: 700; }
+    .barra { height: 14px; background: var(--reboco-escuro); margin: 8px 0; }
+    .barra > div { height: 100%; background: var(--agua); width: 0; }
     p { margin: 0 0 8px; }
-    .pequeno { font-size: .82rem; }
+    .pequeno { font-size: .9375rem; }
+    ul { padding-left: 20px; }
+    .cab { padding: 14px 0 0; }
+    .cab h1 { font-size: 2.25rem; font-weight: 800; margin: 6px 0 2px; }
   </style>
 </head>
 <body>
 <header class="topo">
-  <div class="largura" style="display:block">
-    <h1>Saúde do coletor</h1>
-    <p class="suave"><a href="/">← Nível Rio</a> · atualiza a cada minuto</p>
+  <div class="largura">
+    <a class="marca" href="/" aria-label="Nível Rio, página inicial"><svg class="icone" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M9 5h14l-7 10z" fill="currentColor" stroke="none"/><path d="M3 18.5h26M8 23.5h16M12.5 28h7"/></svg>Nível Rio</a>
   </div>
 </header>
 <main class="largura" style="max-width:820px">
+  <div class="cab">
+    <h1>Saúde do coletor</h1>
+    <p class="suave">Como estão as fontes, o histórico e o espaço usado. Atualiza a cada minuto. <a href="/">Voltar para o início</a></p>
+  </div>
   <section class="cartao">
     <h2>Fontes</h2>
     <table>
@@ -110,7 +120,7 @@ async function carregar() {
   if (!c.ultimos_erros?.length) erros.textContent = 'Nenhum erro nas últimas 24 horas.';
   else {
     const ul = el('ul');
-    for (const e of c.ultimos_erros) ul.append(el('li', `${hora(e.inicio)} · ${NOMES[e.fonte] ?? e.fonte}: ${e.erro}`));
+    for (const e of c.ultimos_erros) ul.append(el('li', `${hora(e.inicio)}, ${NOMES[e.fonte] ?? e.fonte}: ${e.erro}`));
     erros.replaceChildren(ul);
   }
 
@@ -124,7 +134,7 @@ async function carregar() {
     if (!av.ultimos.length) lista.textContent = 'Nenhum aviso registrado ainda.';
     else {
       const ul = el('ul');
-      for (const a of av.ultimos) ul.append(el('li', `${hora(a.criado_em)} · ${a.texto} (Telegram: ${a.telegram ?? '—'})`));
+      for (const a of av.ultimos) ul.append(el('li', `${hora(a.criado_em)}, ${a.texto} (Telegram: ${a.telegram ?? '—'})`));
       lista.replaceChildren(ul);
     }
   }

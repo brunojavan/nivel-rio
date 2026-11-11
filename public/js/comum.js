@@ -14,6 +14,14 @@ export const CONFERIR = {
 export const num = (v, casas = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
 const fmtDiaHora = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 export const hora = (iso) => fmtDiaHora.format(new Date(iso));
+// "15h10" (e "11/11, 15h10" quando não é de hoje).
+const fmtHoraMin = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, hour: '2-digit', minute: '2-digit' });
+const fmtDiaMes = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit' });
+export function horaCurta(iso) {
+  const d = new Date(iso);
+  const hm = fmtHoraMin.format(d).replace(':', 'h');
+  return fmtDiaMes.format(d) === fmtDiaMes.format(new Date()) ? hm : `${fmtDiaMes.format(d)}, ${hm}`;
+}
 
 export function guardado(chave, padrao) {
   try { const v = localStorage.getItem(chave); return v === null ? padrao : JSON.parse(v); } catch { return padrao; }
@@ -67,10 +75,10 @@ export function tendencia(e) {
   const horas = (Date.parse(e.medido_em) - Date.parse(e.h1.medido_em)) / 3_600_000;
   if (horas < 0.66 || horas > 1.75) return null;
   const cmh = ((e.nivel - e.h1.nivel) * 100) / horas;
-  if (Math.abs(cmh) < 2) return { cmh, classe: 'estavel', seta: '●', texto: 'estável' };
+  if (Math.abs(cmh) < 2) return { cmh, classe: 'estavel', texto: 'estável' };
   return cmh > 0
-    ? { cmh, classe: 'sobe', seta: '▲', texto: `▲ ${num(cmh, 0)} cm/h` }
-    : { cmh, classe: 'desce', seta: '▼', texto: `▼ ${num(-cmh, 0)} cm/h` };
+    ? { cmh, classe: 'sobe', texto: `subindo ${num(cmh, 0)} cm/h` }
+    : { cmh, classe: 'desce', texto: `descendo ${num(-cmh, 0)} cm/h` };
 }
 
 // Projeção simples (fase 5): no ritmo da última hora, em quanto tempo chega à próxima cota.
