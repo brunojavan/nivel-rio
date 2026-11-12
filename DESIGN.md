@@ -364,7 +364,7 @@ A revisão de acabamento rodou três rodadas; todas as correções materiais for
 
 ## Raster Provenance
 
-Imagens rasterizadas publicadas em `public/` (só os ícones; o resto do site é SVG, CSS e texto):
+Imagens rasterizadas publicadas em `public/` (os ícones e a imagem de prévia do link; o resto do site é SVG, CSS e texto):
 
 | Arquivo | Tamanho | Origem verificável |
 |---|---|---|
@@ -373,5 +373,6 @@ Imagens rasterizadas publicadas em `public/` (só os ícones; o resto do site é
 | `favicon@2x.png` | 32 × 32 | Mesmo processo, 11 nov 2026. |
 | `favicon@3x.png` | 48 × 48 | Mesmo processo, 11 nov 2026. |
 | `apple-touch-icon.png` | 180 × 180 | Mesmo processo, 11 nov 2026: a marca a 64% sobre o reboco, sem canto (o iPhone arredonda). É o `apple-touch-icon` das três páginas. |
+| `compartilhar.jpg` | 1200 × 630, JPEG | Gerado em 12 nov 2026 por `scripts/compartilhar.mjs` (Chrome sem janela). É a prévia do link nas redes (`og:image` da página inicial e das estações). À esquerda, a marca, a chamada "O nível do rio na sua cidade, agora." e a placa esmaltada com `niveldorio.net`; à direita, a parede de Blumenau com as cotas do AlertaBlu (lidas de `/api/agora` na hora de gerar) e as seis cheias do catálogo com a fonte escrita embaixo. A parede vai sem a água de agora, porque a imagem fica parada e um nível desenhado nela pareceria a leitura do dia. Para refazer: `node scripts/compartilhar.mjs public/compartilhar.jpg`; se a imagem mudar, troque também o nome do arquivo, porque WhatsApp e Facebook guardam a prévia antiga. |
 
 Todos saem do mesmo desenho do `favicon.svg` (o vetor, que os navegadores atuais usam e que muda de cor no tema escuro); os raster ficam sempre na versão clara, sobre o reboco, para aparecerem em aba clara ou escura. Para refazer depois de mudar o desenho: `node scripts/icones.mjs public/favicon.svg <pasta>` e copiar os arquivos para `public/`. Os ícones antigos (quadrado vermelho com ponto de exclamação, da "Versão Alpha" de 2023) foram substituídos porque o vermelho é só para o estado do rio. Os tiles do mapa vêm do OpenFreeMap em tempo de execução e não são arquivos publicados pelo site.

@@ -767,6 +767,10 @@
       {
         "file": "public/apple-touch-icon.png",
         "origin": "Gerado em 2026-11-11 a partir de public/favicon.svg por scripts/icones.mjs (Chrome sem janela): marca em tinta #1D2327 sobre o reboco #CFD4D6. 180 × 180, marca a 64%, sem canto; apple-touch-icon das três páginas."
+      },
+      {
+        "file": "public/compartilhar.jpg",
+        "origin": "Gerado em 2026-11-12 por scripts/compartilhar.mjs (Chrome sem janela, JPEG qualidade 88): a chamada do site e a placa niveldorio.net à esquerda; à direita a parede de Blumenau com as cotas do AlertaBlu (lidas de /api/agora) e as cheias do catálogo (Defesa Civil de Blumenau via Mendeley Data, CC BY 4.0), sem água de agora. 1200 × 630, og:image da página inicial e das estações."
       }
     ]
   },
