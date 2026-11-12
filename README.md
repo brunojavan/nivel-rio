@@ -41,6 +41,7 @@ Cada push na branch `main` publica a versão nova automaticamente (Workers Build
 | `public/estacao.html`, `public/js/estacao.js` | Página de cada estação e barragem (`/estacao/{id}`) |
 | `public/js/parede.js` | A parede da cidade, a placa e as frases de faixa e de sentido do rio |
 | `public/js/mapa.js`, `graficos.js`, `componentes.js`, `comum.js` | Mapa, gráficos e peças comuns |
+| `public/js/medicao.js` | Google Analytics (só em `niveldorio.net`) |
 | `PRODUCT.md`, `DESIGN.md`, `.impeccable/surfaces/` | Para quem é o site, o sistema visual (cores, letra, componentes, regras) e a direção escolhida com a skill Impeccable |
 | `public/saude.html` | Saúde do coletor |
 | `test/` | Testes (Vitest); `banco.test.ts` usa um D1 local |
